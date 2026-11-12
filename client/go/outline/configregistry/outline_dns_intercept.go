@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"localhost/client/go/outline/connectivity"
+	"localhost/client/go/outline/dnstcp"
 
 	"golang.getoutline.org/sdk/network/dnsintercept"
 	"golang.getoutline.org/sdk/network/dnstruncate"
@@ -45,8 +46,12 @@ var linkLocalDNS = netip.MustParseAddrPort("169.254.113.53:53")
 
 // wrapTransportPairWithOutlineDNS intercepts DNS over TCP and UDP at a link-local address and forwards them to the remote resolver.
 //
-// It also checks for UDP connectivity.
-//   - If UDP is available, it forwards DNS queries to the specified resolverAddr.
+// DNS queries received over UDP are forwarded to the resolver over a persistent TCP connection
+// through the tunnel (see the dnstcp package). One connection carries all the queries, so DNS
+// does not open a new UDP flow per query, and responses cannot be forged by off-path attackers.
+//
+// If TCP to the resolver fails, queries fall back to UDP, depending on UDP connectivity:
+//   - If UDP is available, each query is forwarded over UDP.
 //   - If UDP is blocked, it sends back a truncated DNS response.
 //     This forces the OS to retry the DNS query over TCP.
 func wrapTransportPairWithOutlineDNS(sd *Dialer[transport.StreamConn], pl *PacketListener) (*TransportPair, error) {
@@ -65,34 +70,44 @@ func wrapTransportPairWithOutlineDNS(sd *Dialer[transport.StreamConn], pl *Packe
 	if err != nil {
 		return nil, fmt.Errorf("failed to create base PacketRelay: %w", err)
 	}
-	// Forward relay: intercept DNS at link-local address, forward to remote resolver.
-	// DNS gets a shorter 5s timeout on its own independent listener.
+	// Fallback for when TCP to the resolver fails. If UDP is available, forward each query over
+	// UDP. DNS gets a shorter 5s timeout on its own independent listener.
 	dnsListener, err := packetrelay.NewPacketRelayFromPacketListener(pl.PacketListener, 5*time.Second)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create DNS PacketRelay: %w", err)
 	}
-	relayForward := dnsintercept.NewInterceptDNSPacketRelay(dnsListener, baseListener, linkLocalDNS, remoteDNS)
-	// Truncate relay: intercept DNS at link-local address, return truncated response (forces TCP retry).
-	// Non-DNS traffic passes through to baseListener.
+	// If UDP is not available, return a truncated response (forces the OS to retry over TCP).
 	dnsTruncRelay, err := dnstruncate.NewPacketRelay()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create DNS truncate relay: %w", err)
 	}
-	relayTrunc := dnsintercept.NewInterceptDNSPacketRelay(dnsTruncRelay, baseListener, linkLocalDNS, remoteDNS)
-	// Delegate relay starts with truncate (UDP unverified), switches to forward when UDP is healthy.
-	relayMain, err := packetrelay.NewDelegatePacketRelay(relayTrunc)
+	// The fallback starts with truncate (UDP unverified), switches to UDP when UDP is healthy.
+	dnsFallback, err := packetrelay.NewDelegatePacketRelay(dnsTruncRelay)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create delegate PacketRelay: %w", err)
 	}
 
+	dialResolver := func(ctx context.Context) (transport.StreamConn, error) {
+		return sd.Dial(ctx, remoteDNS.String())
+	}
+	dnsTCP, err := dnstcp.NewRelay(dialResolver, remoteDNS, dnsFallback, dnstcp.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create DNS-over-TCP relay: %w", err)
+	}
+	// Intercept DNS at the link-local address and forward it over TCP to the remote resolver.
+	// Non-DNS traffic passes through to baseListener.
+	relayMain := dnsintercept.NewInterceptDNSPacketRelay(dnsTCP, baseListener, linkLocalDNS, remoteDNS)
+
 	onNetworkChanged := func() {
+		// The DNS connection is bound to the old network.
+		dnsTCP.Reset()
 		go func() {
 			if err := connectivity.CheckUDPConnectivity(pl); err == nil {
 				slog.Info("remote device UDP is healthy")
-				relayMain.SetRelay(relayForward)
+				dnsFallback.SetRelay(dnsListener)
 			} else {
 				slog.Warn("remote device UDP is not healthy", "err", err)
-				relayMain.SetRelay(relayTrunc)
+				dnsFallback.SetRelay(dnsTruncRelay)
 			}
 		}()
 	}
