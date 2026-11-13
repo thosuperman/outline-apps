@@ -1,4 +1,4 @@
 *                            @OutlineFoundation/outline-dev
 
-/client/web/model/       @fortuna
-/server_manager/model/       @fortuna
+/outline/client/web/model/       @fortuna
+/outline/server_manager/model/       @fortuna

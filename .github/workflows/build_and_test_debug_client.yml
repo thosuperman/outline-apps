@@ -29,6 +29,10 @@ on:
   schedule:
     - cron: "0 13 * * *"  # Run daily at 1PM UTC.
 
+defaults:
+  run:
+    working-directory: outline
+
 jobs:
   web_test:
     name: Web Test
@@ -41,9 +45,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install NPM Dependencies
         run: npm set cache .npm && npm ci
@@ -70,7 +74,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       - name: Test Go Backend
         run: go test -race -bench=. -benchtime=100ms ./client/...
@@ -127,9 +131,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install Chromium
         if: matrix.installChromium
@@ -141,7 +145,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       - name: Install zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
@@ -177,9 +181,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -187,7 +191,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       - name: Build Tun2Socks (required for Test OutlineAppleLib)
         run: npm run action client/src/tun2socks/build macos
@@ -218,9 +222,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -228,7 +232,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       - name: Build Tun2Socks (required for Test OutlineAppleLib)
         run: npm run action client/src/tun2socks/build ios
@@ -259,9 +263,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -269,7 +273,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       # Builds the web bundle, runs `cap sync ios` (which builds the tun2socks
       # xcframework via the capacitor:sync:before hook), and then runs an
@@ -289,9 +293,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Setup Java
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
@@ -314,9 +318,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Setup Java
         # Capacitor 8's Android project targets Java 21 (see
@@ -329,7 +333,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: '${{ github.workspace }}/go.mod'
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
 
       - name: Build Android Capacitor Client
         run: npm run action client/capacitor/build android

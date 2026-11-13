@@ -29,6 +29,10 @@ on:
   schedule:
     - cron: "0 13 * * *"  # Run daily at 1PM UTC.
 
+defaults:
+  run:
+    working-directory: outline
+
 jobs:
   web_test:
     name: Web Test
@@ -40,9 +44,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./server_manager/package.json
+          cache-dependency-path: ./outline/server_manager/package.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -63,9 +67,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./server_manager/package.json
+          cache-dependency-path: ./outline/server_manager/package.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -91,9 +95,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./server_manager/package.json
+          cache-dependency-path: ./outline/server_manager/package.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -114,9 +118,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./server_manager/package.json
+          cache-dependency-path: ./outline/server_manager/package.json
 
       - name: Install NPM Dependencies
         run: npm ci

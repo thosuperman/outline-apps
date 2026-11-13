@@ -27,6 +27,10 @@ on:
     branches:
       - master
 
+defaults:
+  run:
+    working-directory: outline
+
 jobs:
   lint:
     name: Lint
@@ -40,9 +44,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version-file: outline/.nvmrc
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: ./outline/package-lock.json
 
       - name: Install NPM Dependencies
         run: npm ci
@@ -52,10 +56,10 @@ jobs:
         uses: tj-actions/changed-files@0b975f61488402a699abcebd6a1e25924cf85218
         with:
           files: |
-            **/*.ts
-            **/*.js
-            **/*.cjs
-            **/*.mjs
+            outline/**/*.ts
+            outline/**/*.js
+            outline/**/*.cjs
+            outline/**/*.mjs
 
       - name: Set base and head commits
         id: commits
@@ -74,10 +78,13 @@ jobs:
 
       - name: Lint changed files
         if: ${{ steps.changed-files.outputs.modified_files_count > 0 || steps.changed-files.outputs.added_file_count > 0 }}
+        env:
+          MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
+          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
+        # The steps run in outline/, so strip that leading prefix from the changed-file paths.
         run: |
           npx eslint -f json -o lint-results.json \
-            ${{ steps.changed-files.outputs.modified_files }} \
-            ${{ steps.changed-files.outputs.added_files }} || true
+            $(printf '%s\n' $MODIFIED_FILES $ADDED_FILES | sed 's#^outline/##') || true
 
       - name: Fail on issues in changed lines
         if: ${{ steps.changed-files.outputs.modified_files_count > 0 || steps.changed-files.outputs.added_file_count > 0 }}
@@ -87,5 +94,8 @@ jobs:
           MODIFIED_FILES: ${{ steps.changed-files.outputs.modified_files }}
           ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
           LINT_RESULTS_PATH: lint-results.json
-        run: node .github/scripts/fail_on_changed_line_lint.mjs
+        run: |
+          export MODIFIED_FILES="$(printf '%s\n' $MODIFIED_FILES | sed 's#^outline/##')"
+          export ADDED_FILES="$(printf '%s\n' $ADDED_FILES | sed 's#^outline/##')"
+          node ../.github/scripts/fail_on_changed_line_lint.mjs
       

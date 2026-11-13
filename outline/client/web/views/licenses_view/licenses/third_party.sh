@@ -19,7 +19,7 @@
 
 set -eu
 
-readonly THIRD_PARTY_DIR=$(git rev-parse --show-toplevel)/third_party
+readonly THIRD_PARTY_DIR="$(cd "$(dirname "$0")/../../../../.." && pwd)/third_party"
 
 for i in $(find $THIRD_PARTY_DIR -name METADATA); do
   PACKAGE_NAME=$(basename $(dirname $i))
