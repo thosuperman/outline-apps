@@ -21,7 +21,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 | Resource cleanup | 5 session start/stop cycles return to the goroutine baseline (`TestE2E_SessionCleanupReleasesGoroutines`) | Pass (after making the test server expire idle associations) |
 | Packet relay | Drops rejected packets and continues, survives transient read errors, stops on close, gives up on persistent errors (`vpn/relay_test.go`) | Pass |
 | All Go packages | `go test -race ./client/go/...` | Pass locally (macOS) and in CI (Linux) |
-| Web UI | 105 Jasmine specs in headless Chromium, incl. 40 new: Cognito SRP proof checked against a server-side SRP implementation, Cognito flows, ProxyGrid API shapes and errors, session refresh (single-flight, revoked vs offline), account provisioning (reuse key, over quota, 401 retry, sign-out keeps own servers), keychain storage migration and write-through | Pass (local and CI) |
+| Web UI | 109 Jasmine specs in headless Chromium, incl. 44 new: `proxygridvpn://` app links, Cognito SRP proof checked against a server-side SRP implementation, Cognito flows, ProxyGrid API shapes and errors, session refresh (single-flight, revoked vs offline), account provisioning (reuse key, over quota, 401 retry, sign-out keeps own servers), keychain storage migration and write-through | Pass (local and CI) |
 | Quota handling | Over-quota status blocks provisioning with an explanation; UI disables connect and links to upgrade; the backend's dynamic key also returns the "data limit reached" message | Pass (unit + visual check in browser) |
 | Concurrency | Concurrent token refresh shares one request; identical DNS queries share one exchange; Electron starts serialized (code review) | Pass (unit) |
 
@@ -29,7 +29,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGrid-VPN-dev-macos-universal.dmg`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider` |
+| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGrid-VPN-1.0.0-dev-macos-universal.dmg`, bundle `net.proxygrid.vpn.macos`, app group `group.net.proxygrid.vpn`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider`, URL schemes ss/ssconf/proxygridvpn |
 | `VpnExtensionTest` (tunnel settings incl. new IPv6 and DNS routes, error persistence, address selection) | Pass |
 | Connect/disconnect, DNS, sleep/wake, Wi-Fi switch on a real Mac | Not yet tested (needs the owner to add a key and approve live tests) |
 
@@ -37,7 +37,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGrid-VPN-dev-ios.ipa` |
+| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGrid-VPN-1.0.0-dev-ios.ipa`, bundle `net.proxygrid.vpn.ios`, app group `group.net.proxygrid.vpn` |
 | On-device connect, background/foreground, network switching | Not yet tested |
 
 ## Android
@@ -57,12 +57,15 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 ## CI
 
-"ProxyGrid VPN / Builds" on thosuperman/outline-apps, run 43578073499 (commit c2e35434): all jobs pass.
+"ProxyGrid VPN / Builds" on thosuperman/outline-apps, run 43579536163 (commit ebf9c3b6, after the
+rename to ProxyGrid VPN and the identity change): all jobs pass. The Windows jobs also rebuild the
+routing service and smartdnsblock from source with the new service, pipe and adapter names.
 
 | Job | Result | Artifact |
 |---|---|---|
-| Web and Go tests (Ubuntu) | Pass: 105/105 web specs, all Go packages with `-race` | — |
+| Web and Go tests (Ubuntu) | Pass: 109/109 web specs, all Go packages with `-race` | — |
 | Windows ia32 | Built | `ProxyGrid-VPN-windows-ia32` → `ProxyGrid-VPN-0.0.0-debug-ia32.exe` (unsigned) |
+| Windows helpers | Built from source | `ProxyGrid-VPN-windows-helpers` (OutlineService.exe, smartdnsblock.exe) |
 | Windows arm64 | Built | `ProxyGrid-VPN-windows-arm64` → `ProxyGrid-VPN-0.0.0-debug-arm64.exe` (unsigned) |
 | Android | Built | `ProxyGrid-VPN-android` → `ProxyGrid-VPN-app-debug.apk` (debug-signed) |
 
@@ -75,4 +78,5 @@ targeted `strings.xml` instead of `cdv_strings.xml`); all three are fixed.
 - Any live tunnel on a real device or computer (routing changes; the owner enters keys).
 - ProxyGrid sign-in against the real Cognito pool (identifiers not configured in builds yet; the
   backend is not deployed, so `/vpn/*` endpoints and dynamic keys cannot be exercised).
-- Side-by-side install with the official Outline app (needs the final bundle IDs).
+- Side-by-side install with the official Outline app (identifiers and Windows/Linux system names are
+  now distinct; not yet tried on a machine).

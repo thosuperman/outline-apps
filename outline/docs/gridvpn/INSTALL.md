@@ -1,12 +1,11 @@
 # Installing ProxyGrid VPN test builds
 
-ProxyGrid VPN uses separate app identities from the official Outline app, so both can be installed
-side by side. (The test builds below use a local `com.phuduc.gridvpn.dev.*` bundle prefix until
-the final identifiers are confirmed.)
+ProxyGrid VPN uses its own app identities (`net.proxygrid.vpn.*`, see IDENTITY.md), separate from
+the official Outline app, so both can be installed side by side.
 
 ## macOS (development-signed .dmg)
 
-File: `ProxyGrid-VPN-dev-macos-universal.dmg` (Apple silicon and Intel).
+File: `ProxyGrid-VPN-1.0.0-dev-macos-universal.dmg` (Apple silicon and Intel).
 
 1. Open the DMG and drag **ProxyGrid VPN** to Applications.
 2. Open ProxyGrid VPN. On first connect, macOS asks to add a VPN configuration: allow it.
@@ -18,7 +17,7 @@ System Settings > VPN.
 
 ## iOS (development-signed .ipa)
 
-File: `ProxyGrid-VPN-dev-ios.ipa`. The embedded profile covers the three devices registered to team
+File: `ProxyGrid-VPN-1.0.0-dev-ios.ipa`. The embedded profile covers the three devices registered to team
 797NU6L392.
 
 1. Connect the iPhone to the Mac, open Xcode > Window > Devices and Simulators, select the phone
@@ -45,9 +44,13 @@ File: `ProxyGrid-VPN-<version>-ia32.exe` or `-arm64.exe` (CI artifact `ProxyGrid
    "More info" > "Run anyway".
 2. Open ProxyGrid VPN from the Start menu.
 
-Note: on Windows the routing service and network adapter still use Outline's internal names
-(`OutlineService`, `outline-tap0`) until the identity step, so do not install the ProxyGrid VPN test
-build on a PC that also runs the official Outline app.
+The installer adds its own routing service (`ProxyGridVPNService`) and network adapter
+(`proxygrid-tap0`, 10.0.86.x), so it can sit next to the official Outline app. Connect only one VPN
+at a time.
+
+## Opening keys from links
+
+`proxygridvpn://add?key=<url-encoded key>` opens the app and offers to add the key.
 
 ## Using the app
 
