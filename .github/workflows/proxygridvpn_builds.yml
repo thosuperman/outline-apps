@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ProxyGrid VPN client builds: tests, Windows installers and Android packages, uploaded as
-# ProxyGrid-VPN-named artifacts. Apple builds need the Phu Duc signing identity and run locally (see
-# docs/gridvpn/BUILD.md).
+# ProxyGridVPN client builds: tests, Windows installers and Android packages, uploaded as
+# ProxyGridVPN-named artifacts. Apple builds need the Phu Duc signing identity and run locally (see
+# docs/proxygridvpn/BUILD.md).
 #
 # Signing material only comes from repository secrets and is never written to the repo:
 #   ANDROID_KEY_STORE_CONTENTS (base64 PKCS#12) + ANDROID_KEY_STORE_PASSWORD  -> signed release .aab/.apk
 #   (Windows Authenticode signing is configured in electron/windows/electron_builder_signing_plugin.cjs)
 # ProxyGrid sign-in identifiers come from repository variables (public values):
 #   PROXYGRID_COGNITO_REGION, PROXYGRID_USER_POOL_ID, PROXYGRID_USER_POOL_CLIENT_ID
-name: ProxyGrid VPN / Builds
+name: ProxyGridVPN / Builds
 
 concurrency:
-  group: '${{ github.ref }} ProxyGrid VPN'
+  group: '${{ github.ref }} ProxyGridVPN'
   cancel-in-progress: true
 
 on:
@@ -32,7 +32,7 @@ on:
     branches:
       - feat/gridvpn-client
     tags:
-      - 'gridvpn-v*'
+      - 'proxygridvpn-v*'
   workflow_dispatch:
     inputs:
       version:
@@ -115,26 +115,26 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: matrix.arch == 'ia32'
         with:
-          name: ProxyGrid-VPN-windows-helpers
+          name: ProxyGridVPN-windows-helpers
           path: |
             outline/client/electron/windows/OutlineService/OutlineService/bin/OutlineService.exe
             outline/client/electron/windows/smartdnsblock/bin/smartdnsblock.exe
           if-no-files-found: error
       # The NSIS .exe installs the TAP driver and routing service. An MSI can be produced with
-      # GRIDVPN_WINDOWS_MSI=1 but cannot connect yet (no TAP driver custom action).
+      # PROXYGRIDVPN_WINDOWS_MSI=1 but cannot connect yet (no TAP driver custom action).
       - name: Build installer (.exe)
         shell: bash
         run: |
           if [ -n "$VERSION_NAME" ]; then
             npm run action client/electron/build windows -- --arch ${{ matrix.arch }} \
               --buildMode=release --versionName="${VERSION_NAME#gridvpn-v}" \
-              --autoUpdateUrl="${{ vars.GRIDVPN_UPDATE_URL || 'https://proxygrid.net/vpn/download/windows/' }}"
+              --autoUpdateUrl="${{ vars.PROXYGRIDVPN_UPDATE_URL || 'https://proxygrid.net/vpn/download/windows/' }}"
           else
             npm run action client/electron/build windows -- --arch ${{ matrix.arch }}
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: ProxyGrid-VPN-windows-${{ matrix.arch }}
+          name: ProxyGridVPN-windows-${{ matrix.arch }}
           path: outline/output/client/electron/build/*.exe
           if-no-files-found: error
 
@@ -165,13 +165,13 @@ jobs:
           fi
       - name: Rename artifacts
         run: |
-          mkdir -p ../gridvpn-android
+          mkdir -p ../proxygridvpn-android
           find client/platforms/android -name '*.apk' -o -name '*.aab' -o -name '*.apks' | while read f; do
-            cp "$f" "../gridvpn-android/ProxyGrid-VPN-$(basename "$f")"
+            cp "$f" "../proxygridvpn-android/ProxyGridVPN-$(basename "$f")"
           done
-          ls -la ../gridvpn-android
+          ls -la ../proxygridvpn-android
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: ProxyGrid-VPN-android
-          path: gridvpn-android/*
+          name: ProxyGridVPN-android
+          path: proxygridvpn-android/*
           if-no-files-found: error

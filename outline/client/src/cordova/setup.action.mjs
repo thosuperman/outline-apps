@@ -78,7 +78,7 @@ export async function main(...parameters) {
 }
 
 // The name users see. config.xml keeps the internal Cordova project name "Outline".
-const APP_DISPLAY_NAME = 'ProxyGrid VPN';
+const APP_DISPLAY_NAME = 'ProxyGridVPN';
 
 // Sets the Android app and launcher labels, which Cordova derives from config.xml <name>.
 async function setAndroidDisplayName() {

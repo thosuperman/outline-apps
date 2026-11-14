@@ -1,14 +1,14 @@
-# ProxyGrid VPN app identity
+# ProxyGridVPN app identity
 
-Product name: **ProxyGrid VPN** (chosen 2026-11-14 after the naming check below). Tagline
+Product name: **ProxyGridVPN**, one word (owner's launch brief, 2026-11-14). Platform: ProxyGrid. Tagline
 "Your Network. Your Freedom.", website https://proxygrid.net/vpn.
 
-ProxyGrid VPN installs alongside the official Outline app, so every OS-level identifier differs
+ProxyGridVPN installs alongside the official Outline app, so every OS-level identifier differs
 from Outline's. Internal Java/Swift package and module names (`org.outline.vpn`,
 `OutlineAppleLib`, `Tun2socks`, the `OutlineService.exe` file name, ...) are **not** renamed:
 users don't see them, and keeping them makes upstream fixes easy to merge.
 
-| What | Outline (upstream) | ProxyGrid VPN | Where it is set |
+| What | Outline (upstream) | ProxyGridVPN | Where it is set |
 |---|---|---|---|
 | Android application ID | `org.outline.android.client` | `net.proxygrid.vpn` | `client/config.xml` (`widget@id`) |
 | iOS bundle ID | `org.outline.ios.client` | `net.proxygrid.vpn.ios` | `src/cordova/apple/xcode/Outline.xcodeproj` |
@@ -20,9 +20,9 @@ users don't see them, and keeping them makes upstream fixes easy to merge.
 | Desktop data directory | `<config>/org.getoutline.client` | `<config>/net.proxygrid.vpn` | `client/go/outline/client.go` |
 | Windows service / pipe | `OutlineService` / `OutlineServicePipe` | `ProxyGridVPNService` / `ProxyGridVPNServicePipe` | `electron/windows/OutlineService`, `install_windows_service.bat`, `custom_install_steps.nsh`, `routing_service.ts` |
 | Windows TAP adapter / subnet | `outline-tap0` / `10.0.85.0/24` | `proxygrid-tap0` / `10.0.86.0/24` | `add_tap_device.bat`, `go_vpn_tunnel.ts`, `OutlineService.cs`, `smartdnsblock.cpp` |
-| Windows firewall (WFP) provider | `Outline` | `ProxyGrid VPN` | `smartdnsblock.cpp` |
+| Windows firewall (WFP) provider | `Outline` | `ProxyGridVPN` | `smartdnsblock.cpp` |
 | Linux TUN / address / routing | `outline-tun1`, `10.0.85.5`, table 7113, mark 0x711E | `proxygrid-tun1`, `10.0.86.5`, table 7124, mark 0x7C6D | `electron/vpn_service.ts` |
-| Linux install path / executable | `/opt/Outline/Outline` | `/opt/ProxyGrid VPN/proxygrid-vpn` | electron-builder, `debian/after_install.sh` |
+| Linux install path / executable | `/opt/Outline/Outline` | `/opt/ProxyGridVPN/proxygrid-vpn` | electron-builder, `debian/after_install.sh` |
 | App URL scheme | — | `proxygridvpn://` | Info.plist, `config.xml`, Electron |
 | Access-key schemes | `ss://`, `ssconf://` | unchanged (compatibility) | — |
 
@@ -55,6 +55,7 @@ No certificate, private key, keystore or provisioning profile is committed.
 
 "GridVPN" was checked first and found risky: an existing VPN app called "Grid VPN" has a live
 privacy-policy page (sites.google.com/view/gridvpn, typical of a Google Play listing), "SavGridVPN"
-is on Google Play, and the USPTO mark GRIDLOCK covers VPN services. No registered GRIDVPN mark was
-found (not a formal legal search). The owner chose "ProxyGrid VPN", which matches the owned domain
-proxygrid.net. A formal trademark search is still recommended before store submission.
+is on Google Play, and the USPTO mark GRIDLOCK covers VPN services. The owner then chose
+"ProxyGrid VPN" and, in the launch brief, the one-word **ProxyGridVPN**, which matches the owned
+domain proxygrid.net. The identifiers above (`net.proxygrid.vpn…`, `proxygridvpn://`) fit the
+final name and were kept. A formal trademark search is still recommended before store submission.

@@ -37,7 +37,7 @@ enum OUTLINE_ACCESS_KEY_SCHEME {
   DYNAMIC = 'ssconf',
 }
 
-/** The app's own URL scheme (see docs/gridvpn/IDENTITY.md). */
+/** The app's own URL scheme (see docs/proxygridvpn/IDENTITY.md). */
 export const APP_URL_SCHEME = 'proxygridvpn';
 
 // Returns the access key carried by an app link, proxygridvpn://add?key=<url-encoded ss:// or

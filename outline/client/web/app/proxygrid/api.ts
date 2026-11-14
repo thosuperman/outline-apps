@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * Typed client for the ProxyGrid VPN API (backend/handlers/vpn.py and console.py in the
+ * Typed client for the ProxyGridVPN API (backend/handlers/vpn.py and console.py in the
  * ProxyGrid repository). Shapes mirror the backend responses exactly.
  */
 

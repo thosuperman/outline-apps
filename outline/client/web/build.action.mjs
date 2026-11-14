@@ -44,7 +44,7 @@ export async function main(...parameters) {
       );
     }
 
-    // Crash reporting is opt-in for ProxyGrid VPN builds: without a DSN nothing is sent anywhere.
+    // Crash reporting is opt-in for ProxyGridVPN builds: without a DSN nothing is sent anywhere.
     if (!sentryDsn) {
       console.warn(
         'SENTRY_DSN is not set: this release build has no crash reporting.'

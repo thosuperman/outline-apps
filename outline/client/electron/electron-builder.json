@@ -1,6 +1,6 @@
 {
-  "productName": "ProxyGrid VPN",
-  "artifactName": "ProxyGrid-VPN-${version}-${arch}.${ext}",
+  "productName": "ProxyGridVPN",
+  "artifactName": "ProxyGridVPN-${version}-${arch}.${ext}",
   "directories": {
     "buildResources": "output/client/electron",
     "output": "output/client/electron/build"
@@ -47,7 +47,7 @@
   "appId": "net.proxygrid.vpn.desktop",
   "protocols": [
     {
-      "name": "ProxyGrid VPN",
+      "name": "ProxyGridVPN",
       "schemes": [
         "proxygridvpn"
       ]

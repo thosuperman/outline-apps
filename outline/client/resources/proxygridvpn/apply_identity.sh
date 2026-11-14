@@ -14,10 +14,10 @@
 # limitations under the License.
 
 # Applies the app's OS-level identity so it installs alongside the official Outline app.
-# Run once, after the product name is confirmed (see docs/gridvpn/IDENTITY.md):
+# Run once, after the product name is confirmed (see docs/proxygridvpn/IDENTITY.md):
 #
-#   client/resources/gridvpn/apply_identity.sh <apple-prefix> <android-id> <desktop-app-id>
-#   e.g. client/resources/gridvpn/apply_identity.sh net.proxygrid.vpn net.proxygrid.vpn net.proxygrid.vpn.desktop
+#   client/resources/proxygridvpn/apply_identity.sh <apple-prefix> <android-id> <desktop-app-id>
+#   e.g. client/resources/proxygridvpn/apply_identity.sh net.proxygrid.vpn net.proxygrid.vpn net.proxygrid.vpn.desktop
 #
 # Apple:   <prefix>.ios / <prefix>.macos (+ .VpnExtension, .AppKitIntegration),
 #          app group group.<prefix>

@@ -32,7 +32,7 @@ function emit(el: HTMLElement, name: string, detail: object = {}) {
   );
 }
 
-export const GRIDVPN_MARK = svg`
+export const PROXYGRIDVPN_MARK = svg`
   <svg viewBox="0 0 1024 1024" aria-hidden="true">
     <rect width="1024" height="1024" rx="232" fill="var(--grid-vpn, #5b5bd6)"/>
     <path d="M512 196 L774 292 V500 C774 662 664 776 512 836 C360 776 250 662 250 500 V292 Z"
@@ -45,7 +45,7 @@ export const GRIDVPN_MARK = svg`
   </svg>`;
 
 /**
- * The ProxyGrid VPN home screen: one large connect control, a region picker with live health and the
+ * The ProxyGridVPN home screen: one large connect control, a region picker with live health and the
  * plan's data usage for ProxyGrid, and the user's own Outline-compatible servers in a second
  * tab (the existing server list is slotted in as "own-servers").
  */
@@ -406,7 +406,10 @@ export class HomeView extends LitElement {
     return html`<div class="column">
       <div class="tabs" role="tablist">
         ${this.tab('proxygrid', BRAND.platformName)}
-        ${this.tab('own', this.t('gridvpn-my-own-server', 'My Own Server'))}
+        ${this.tab(
+          'own',
+          this.t('proxygridvpn-my-own-server', 'My Own Server')
+        )}
       </div>
       ${this.mode === 'proxygrid'
         ? this.renderProxyGrid()
@@ -435,7 +438,7 @@ export class HomeView extends LitElement {
 
   private renderSignIn() {
     return html`<div class="brand">
-        ${GRIDVPN_MARK}
+        ${PROXYGRIDVPN_MARK}
         <h2>${BRAND.productName}</h2>
         <p class="sub">${BRAND.tagline}</p>
       </div>
@@ -451,7 +454,7 @@ export class HomeView extends LitElement {
         }}
       >
         <label
-          >${this.t('gridvpn-email', 'Email')}
+          >${this.t('proxygridvpn-email', 'Email')}
           <input
             type="email"
             autocomplete="username"
@@ -462,7 +465,7 @@ export class HomeView extends LitElement {
               (this.email = (e.target as HTMLInputElement).value)}
         /></label>
         <label
-          >${this.t('gridvpn-password', 'Password')}
+          >${this.t('proxygridvpn-password', 'Password')}
           <input
             type="password"
             autocomplete="current-password"
@@ -476,28 +479,28 @@ export class HomeView extends LitElement {
           : nothing}
         <button class="btn" type="submit" ?disabled=${this.busy}>
           ${this.busy
-            ? this.t('gridvpn-signing-in', 'Signing in…')
-            : this.t('gridvpn-sign-in', 'Sign in to ProxyGrid')}
+            ? this.t('proxygridvpn-signing-in', 'Signing in…')
+            : this.t('proxygridvpn-sign-in', 'Sign in to ProxyGrid')}
         </button>
         <div class="row-actions">
           <a href=${BRAND.forgotPasswordUrl} target="_blank" rel="noopener"
-            >${this.t('gridvpn-forgot-password', 'Forgot password?')}</a
+            >${this.t('proxygridvpn-forgot-password', 'Forgot password?')}</a
           >
           <a href=${BRAND.signUpUrl} target="_blank" rel="noopener"
-            >${this.t('gridvpn-create-account', 'Create free account')}</a
+            >${this.t('proxygridvpn-create-account', 'Create free account')}</a
           >
         </div>
       </form>
       <p class="notice">
         ${this.t(
-          'gridvpn-free-plan-notice',
+          'proxygridvpn-free-plan-notice',
           'Free plan: 3 GB every 30 days in Tokyo, Seoul, Virginia and Frankfurt.'
         )}
         <button
           class="link"
           @click=${() => emit(this, 'HomeModeChanged', {mode: 'own'})}
         >
-          ${this.t('gridvpn-use-own-server', 'Have your own server?')}
+          ${this.t('proxygridvpn-use-own-server', 'Have your own server?')}
         </button>
       </p>`;
   }
@@ -514,13 +517,16 @@ export class HomeView extends LitElement {
     >
       <p class="section-title">
         ${isTotp
-          ? this.t('gridvpn-totp-title', 'Two-step verification')
-          : this.t('gridvpn-new-password-title', 'Choose a new password')}
+          ? this.t('proxygridvpn-totp-title', 'Two-step verification')
+          : this.t('proxygridvpn-new-password-title', 'Choose a new password')}
       </p>
       <label
         >${isTotp
-          ? this.t('gridvpn-totp-label', '6-digit code from your authenticator')
-          : this.t('gridvpn-new-password-label', 'New password')}
+          ? this.t(
+              'proxygridvpn-totp-label',
+              '6-digit code from your authenticator'
+            )
+          : this.t('proxygridvpn-new-password-label', 'New password')}
         <input
           type=${isTotp ? 'text' : 'password'}
           inputmode=${isTotp ? 'numeric' : 'text'}
@@ -534,14 +540,14 @@ export class HomeView extends LitElement {
         ? html`<p class="error" role="alert">${this.account.error}</p>`
         : nothing}
       <button class="btn" type="submit" ?disabled=${this.busy}>
-        ${this.t('gridvpn-continue', 'Continue')}
+        ${this.t('proxygridvpn-continue', 'Continue')}
       </button>
       <button
         class="btn secondary"
         type="button"
         @click=${() => emit(this, 'ProxyGridCancelChallenge')}
       >
-        ${this.t('gridvpn-cancel', 'Cancel')}
+        ${this.t('proxygridvpn-cancel', 'Cancel')}
       </button>
     </form>`;
   }
@@ -561,23 +567,23 @@ export class HomeView extends LitElement {
         ?.label ?? '';
     const statusText = {
       [ServerConnectionState.CONNECTED]: this.t(
-        'gridvpn-protected',
+        'proxygridvpn-protected',
         'Protected'
       ),
       [ServerConnectionState.CONNECTING]: this.t(
-        'gridvpn-connecting',
+        'proxygridvpn-connecting',
         'Connecting…'
       ),
       [ServerConnectionState.RECONNECTING]: this.t(
-        'gridvpn-reconnecting',
+        'proxygridvpn-reconnecting',
         'Reconnecting…'
       ),
       [ServerConnectionState.DISCONNECTING]: this.t(
-        'gridvpn-disconnecting',
+        'proxygridvpn-disconnecting',
         'Disconnecting…'
       ),
       [ServerConnectionState.DISCONNECTED]: this.t(
-        'gridvpn-not-protected',
+        'proxygridvpn-not-protected',
         'Not protected'
       ),
     }[st];
@@ -585,8 +591,8 @@ export class HomeView extends LitElement {
       <button
         class=${classMap({power: true, connected, pending})}
         aria-label=${connected
-          ? this.t('gridvpn-disconnect', 'Disconnect')
-          : this.t('gridvpn-connect', 'Connect')}
+          ? this.t('proxygridvpn-disconnect', 'Disconnect')
+          : this.t('proxygridvpn-connect', 'Connect')}
         ?disabled=${(overQuota && !connected) || pending}
         @click=${() =>
           emit(this, connected ? 'ProxyGridDisconnect' : 'ProxyGridConnect')}
@@ -609,10 +615,15 @@ export class HomeView extends LitElement {
         </p>
         <p class="sub">
           ${connected
-            ? this.t('gridvpn-connected-via', `via ${region}`, 'region', region)
+            ? this.t(
+                'proxygridvpn-connected-via',
+                `via ${region}`,
+                'region',
+                region
+              )
             : region
               ? this.t(
-                  'gridvpn-tap-to-connect',
+                  'proxygridvpn-tap-to-connect',
                   `Tap to connect · ${region}`,
                   'region',
                   region
@@ -623,11 +634,11 @@ export class HomeView extends LitElement {
       ${overQuota && !connected
         ? html`<div class="alert">
             ${this.t(
-              'gridvpn-over-quota',
+              'proxygridvpn-over-quota',
               'Your data allowance for this period is used up.'
             )}
             <a href=${BRAND.pricingUrl} target="_blank" rel="noopener"
-              >${this.t('gridvpn-upgrade', 'Upgrade')}</a
+              >${this.t('proxygridvpn-upgrade', 'Upgrade')}</a
             >
           </div>`
         : nothing}
@@ -639,7 +650,9 @@ export class HomeView extends LitElement {
       (this.account?.status?.regions ?? []).map(r => [r.region, r])
     );
     return html`<div>
-      <p class="section-title">${this.t('gridvpn-location', 'Location')}</p>
+      <p class="section-title">
+        ${this.t('proxygridvpn-location', 'Location')}
+      </p>
       <div class="regions">
         ${PROXYGRID_REGIONS.map(({region, label}) => {
           const rs = statusByRegion.get(region);
@@ -647,10 +660,10 @@ export class HomeView extends LitElement {
           const down = rs?.node_status === 'down';
           const available = !!rs;
           const meta = up
-            ? this.t('gridvpn-region-online', 'Online')
+            ? this.t('proxygridvpn-region-online', 'Online')
             : down
-              ? this.t('gridvpn-region-degraded', 'Degraded')
-              : this.t('gridvpn-region-soon', 'Coming soon');
+              ? this.t('proxygridvpn-region-degraded', 'Degraded')
+              : this.t('proxygridvpn-region-soon', 'Coming soon');
           return html`<button
             class="region"
             aria-pressed=${this.account?.selectedRegion === region
@@ -707,7 +720,7 @@ export class HomeView extends LitElement {
           ${isNaN(renews.getTime())
             ? nothing
             : this.t(
-                'gridvpn-renews',
+                'proxygridvpn-renews',
                 `Resets ${renews.toLocaleDateString()}`,
                 'date',
                 renews.toLocaleDateString()
@@ -715,8 +728,8 @@ export class HomeView extends LitElement {
         </span>
         <a href=${BRAND.pricingUrl} target="_blank" rel="noopener"
           >${s.plan.id === 'free'
-            ? this.t('gridvpn-get-more-data', 'Get more data')
-            : this.t('gridvpn-manage-plan', 'Manage plan')}</a
+            ? this.t('proxygridvpn-get-more-data', 'Get more data')
+            : this.t('proxygridvpn-manage-plan', 'Manage plan')}</a
         >
       </div>
       ${this.account?.stale && this.account.error
@@ -729,7 +742,7 @@ export class HomeView extends LitElement {
     return html`<div class="row-actions">
       <span class="sub">${email}</span>
       <button class="link" @click=${() => emit(this, 'ProxyGridSignOut')}>
-        ${this.t('gridvpn-sign-out', 'Sign out')}
+        ${this.t('proxygridvpn-sign-out', 'Sign out')}
       </button>
     </div>`;
   }

@@ -16,7 +16,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {BRAND} from '../../../app/brand';
-import {GRIDVPN_MARK} from '../../home_view';
+import {PROXYGRIDVPN_MARK} from '../../home_view';
 
 @customElement('root-header')
 export class RootHeader extends LitElement {
@@ -75,7 +75,7 @@ export class RootHeader extends LitElement {
             <md-icon>menu</md-icon>
           </md-icon-button>`}
       <h1>
-        ${this.showBackButton ? nothing : GRIDVPN_MARK}${this.showBackButton
+        ${this.showBackButton ? nothing : PROXYGRIDVPN_MARK}${this.showBackButton
           ? this.title || BRAND.productName
           : BRAND.productName}
       </h1>

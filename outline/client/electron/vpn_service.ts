@@ -47,7 +47,7 @@ export async function establishVpn(tsRequest: StartRequestJson) {
 
       // Network Manager connection name, Use "TUN Connection" instead of "VPN Connection"
       // because Network Manager has a dedicated "VPN Connection" concept that we did not implement
-      connectionName: 'ProxyGrid VPN TUN Connection',
+      connectionName: 'ProxyGridVPN TUN Connection',
 
       // TUN IP. Outline uses 10.0.85.x ('10.0.85.5', and the old AppImage's '10.0.85.1'):
       // https://github.com/OutlineFoundation/outline-apps/blob/client/linux/v1.14.0/client/electron/linux_proxy_controller/outline_proxy_controller.h#L204

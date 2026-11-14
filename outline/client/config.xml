@@ -21,7 +21,7 @@
          (APP_DISPLAY_NAME) on Android. -->
     <name>Outline</name>
     <description>
-        ProxyGrid VPN. Your Network. Your Freedom.
+        ProxyGridVPN. Your Network. Your Freedom.
     </description>
     <content src="index_cordova.html" />
     <access origin="*" />

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Renders the ProxyGrid VPN SVG sources to PNGs: node render.mjs <svg> <size> <out.png> [<size> <out.png> ...]
+// Renders the ProxyGridVPN SVG sources to PNGs: node render.mjs <svg> <size> <out.png> [<size> <out.png> ...]
 // Uses the headless Chromium that the web tests already depend on, so output is deterministic
 // for a given puppeteer version.
 import {readFile} from 'node:fs/promises';

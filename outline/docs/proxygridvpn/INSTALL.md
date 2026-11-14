@@ -1,48 +1,48 @@
-# Installing ProxyGrid VPN test builds
+# Installing ProxyGridVPN test builds
 
-ProxyGrid VPN uses its own app identities (`net.proxygrid.vpn.*`, see IDENTITY.md), separate from
+ProxyGridVPN uses its own app identities (`net.proxygrid.vpn.*`, see IDENTITY.md), separate from
 the official Outline app, so both can be installed side by side.
 
 ## macOS (development-signed .dmg)
 
-File: `ProxyGrid-VPN-1.0.0-dev-macos-universal.dmg` (Apple silicon and Intel).
+File: `ProxyGridVPN-1.0.0-dev-macos-universal.dmg` (Apple silicon and Intel).
 
-1. Open the DMG and drag **ProxyGrid VPN** to Applications.
-2. Open ProxyGrid VPN. On first connect, macOS asks to add a VPN configuration: allow it.
+1. Open the DMG and drag **ProxyGridVPN** to Applications.
+2. Open ProxyGridVPN. On first connect, macOS asks to add a VPN configuration: allow it.
 3. This build is signed with an Apple Development certificate of team 797NU6L392 and runs only on
    Macs registered to that team (Mac A and Mac B). Other Macs need a Developer ID build.
 
-To remove: quit ProxyGrid VPN, delete it from Applications, and remove the "ProxyGrid VPN" VPN entry in
+To remove: quit ProxyGridVPN, delete it from Applications, and remove the "ProxyGridVPN" VPN entry in
 System Settings > VPN.
 
 ## iOS (development-signed .ipa)
 
-File: `ProxyGrid-VPN-1.0.0-dev-ios.ipa`. The embedded profile covers the three devices registered to team
+File: `ProxyGridVPN-1.0.0-dev-ios.ipa`. The embedded profile covers the three devices registered to team
 797NU6L392.
 
 1. Connect the iPhone to the Mac, open Xcode > Window > Devices and Simulators, select the phone
    and drag the `.ipa` onto "Installed Apps" (or use Apple Configurator).
 2. On the phone, enable Developer Mode if asked (Settings > Privacy & Security).
-3. Open ProxyGrid VPN and allow the VPN configuration on first connect.
+3. Open ProxyGridVPN and allow the VPN configuration on first connect.
 
 ## Android (.apk)
 
-File: `ProxyGrid-VPN-app-debug.apk` (CI artifact `ProxyGrid-VPN-android`).
+File: `ProxyGridVPN-app-debug.apk` (CI artifact `ProxyGridVPN-android`).
 
 1. Copy the APK to the phone and open it; allow installing from that source when asked.
-2. Open ProxyGrid VPN and accept the VPN connection request on first connect.
+2. Open ProxyGridVPN and accept the VPN connection request on first connect.
 
 Release builds are signed `.aab` (Play Store) and a universal `.apk`, produced by CI when the
 keystore secrets are set.
 
 ## Windows (.exe)
 
-File: `ProxyGrid-VPN-<version>-ia32.exe` or `-arm64.exe` (CI artifact `ProxyGrid-VPN-windows-<arch>`).
+File: `ProxyGridVPN-<version>-ia32.exe` or `-arm64.exe` (CI artifact `ProxyGridVPN-windows-<arch>`).
 
-1. Run the installer. It needs administrator rights to install the ProxyGrid VPN network adapter (TAP
+1. Run the installer. It needs administrator rights to install the ProxyGridVPN network adapter (TAP
    driver) and routing service. Unsigned test builds show a SmartScreen warning: choose
    "More info" > "Run anyway".
-2. Open ProxyGrid VPN from the Start menu.
+2. Open ProxyGridVPN from the Start menu.
 
 The installer adds its own routing service (`ProxyGridVPNService`) and network adapter
 (`proxygrid-tap0`, 10.0.86.x), so it can sit next to the official Outline app. Connect only one VPN

@@ -105,10 +105,10 @@ export async function main(...parameters) {
   electronConfig[packaging.builderKey].target = [
     {arch, target: packaging.targetFormat},
   ];
-  // Experimental MSI next to the NSIS installer (GRIDVPN_WINDOWS_MSI=1). It does NOT run
+  // Experimental MSI next to the NSIS installer (PROXYGRIDVPN_WINDOWS_MSI=1). It does NOT run
   // custom_install_steps.nsh, so the TAP driver is not installed and the VPN cannot connect
   // until an MSI custom action for add_tap_device.bat exists. Do not ship it yet.
-  if (platform === 'windows' && process.env.GRIDVPN_WINDOWS_MSI) {
+  if (platform === 'windows' && process.env.PROXYGRIDVPN_WINDOWS_MSI) {
     electronConfig[packaging.builderKey].target.push({arch, target: 'msi'});
     electronConfig.msi = {perMachine: true, oneClick: false};
   }

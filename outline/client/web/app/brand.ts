@@ -15,10 +15,10 @@
 /**
  * Product identity shown in the UI. Kept in one place so the product name can change without
  * touching components. Bundle IDs, package names and URL schemes live in the platform build
- * configuration (see docs/gridvpn/IDENTITY.md), not here.
+ * configuration (see docs/proxygridvpn/IDENTITY.md), not here.
  */
 export const BRAND = {
-  productName: 'ProxyGrid VPN',
+  productName: 'ProxyGridVPN',
   platformName: 'ProxyGrid',
   tagline: 'Your Network. Your Freedom.',
   websiteUrl: 'https://proxygrid.net/vpn',

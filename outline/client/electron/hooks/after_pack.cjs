@@ -48,7 +48,7 @@ function patchLinuxRPath(binDir) {
   }
 
   try {
-    const DebianInstallFolder = '/opt/ProxyGrid VPN';
+    const DebianInstallFolder = '/opt/ProxyGridVPN';
     execSync(
       `patchelf --add-rpath "${DebianInstallFolder}" "${outlineBinFile}"`,
       {

@@ -34,7 +34,7 @@ function platformBinaryDir() {
 
 /**
  * Get the unpacked asar folder path.
- *   - For Debian, `/opt/ProxyGrid VPN/resources/app.asar.unpacked`
+ *   - For Debian, `/opt/ProxyGridVPN/resources/app.asar.unpacked`
  *   - For Windows, `C:\Program Files (x86)\Outline\`
  * @returns A string representing the path of the unpacked asar folder.
  */
@@ -44,7 +44,7 @@ function unpackedAppPath() {
 
 /**
  * Get the parent directory path of the current application binary.
- *   - For Debian, `/opt/ProxyGrid VPN/resources/app.asar`
+ *   - For Debian, `/opt/ProxyGridVPN/resources/app.asar`
  *   - For Windows, `C:\Program Files (x86)\Outline\`
  * @returns A string representing the path of the application directory.
  */

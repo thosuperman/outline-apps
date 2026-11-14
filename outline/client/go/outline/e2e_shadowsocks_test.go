@@ -43,7 +43,7 @@ import (
 
 const (
 	e2eCipher = "chacha20-ietf-poly1305"
-	e2eSecret = "gridvpn-e2e-secret"
+	e2eSecret = "proxygridvpn-e2e-secret"
 )
 
 var linkLocalDNSAddr = netip.MustParseAddrPort("169.254.113.53:53")
@@ -345,7 +345,7 @@ func (s *ssServer) serveUDP() {
 
 func ssKey(serverAddr string) string {
 	userInfo := base64.RawURLEncoding.EncodeToString([]byte(e2eCipher + ":" + e2eSecret))
-	return fmt.Sprintf("ss://%s@%s#ProxyGrid%%20VPN%%20E2E", userInfo, serverAddr)
+	return fmt.Sprintf("ss://%s@%s#ProxyGridVPN%%20E2E", userInfo, serverAddr)
 }
 
 func newE2EClient(t *testing.T, config string) *Client {
@@ -437,7 +437,7 @@ func TestE2E_TCPAndUDPRelay(t *testing.T) {
 	// TCP: a larger transfer, so AEAD chunking is exercised.
 	conn, err := c.DialStream(context.Background(), echo)
 	require.NoError(t, err)
-	data := bytes.Repeat([]byte("gridvpn"), 40000)
+	data := bytes.Repeat([]byte("proxygridvpn"), 40000)
 	go conn.Write(data)
 	got := make([]byte, len(data))
 	_, err = io.ReadFull(conn, got)
@@ -461,7 +461,7 @@ func TestE2E_DNSInterceptedAtLinkLocalAddress(t *testing.T) {
 	// Let the session's UDP health check switch DNS to forwarding mode.
 	require.Eventually(t, func() bool { return dns.queries.Load() > 0 }, 10*time.Second, 50*time.Millisecond)
 
-	query := newQuery(t, 0x4242, "example.gridvpn.test.")
+	query := newQuery(t, 0x4242, "example.proxygridvpn.test.")
 	var reply packetIn
 	require.Eventually(t, func() bool {
 		reply = exchangePacket(t, c, linkLocalDNSAddr, query)
@@ -503,7 +503,7 @@ func TestE2E_DNSRetransmissionsShareOneExchange(t *testing.T) {
 		wg.Add(1)
 		go func(id uint16) {
 			defer wg.Done()
-			reply := exchangePacket(t, c, linkLocalDNSAddr, newQuery(t, id, "burst.gridvpn.test."))
+			reply := exchangePacket(t, c, linkLocalDNSAddr, newQuery(t, id, "burst.proxygridvpn.test."))
 			var p dnsmessage.Parser
 			if hdr, err := p.Start(reply.payload); err == nil && hdr.ID == id && !hdr.Truncated {
 				answered.Add(1)

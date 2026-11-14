@@ -1,4 +1,4 @@
-# Building ProxyGrid VPN
+# Building ProxyGridVPN
 
 All commands run from the `outline/` directory of the repository. Requirements are the same as
 upstream (Node 22, Go 1.25, Xcode for Apple, JDK 17 + Android SDK/NDK for Android, zig for the
@@ -25,7 +25,7 @@ variables.
   (`v0.1.0-rc1.0.20260915234250-3f66d9c28049`), fetched through the Go module proxy; no local
   checkout or `replace` directive is needed.
 - Icons and splash screens are generated from SVG sources by
-  `client/resources/gridvpn/generate.sh` with the pinned puppeteer Chromium.
+  `client/resources/proxygridvpn/generate.sh` with the pinned puppeteer Chromium.
 - Versions come from `--versionName` / `--buildNumber`, not from the build machine.
 
 ## Web UI only (browser, fake VPN)
@@ -70,7 +70,7 @@ ANDROID_KEY_STORE_CONTENTS=<base64 PKCS#12> ANDROID_KEY_STORE_PASSWORD=<password
 ```
 
 The keystore is read from the environment and never stored in the repository. The app label is
-set to ProxyGrid VPN by the setup step; the internal Cordova project name stays `Outline` because the
+set to ProxyGridVPN by the setup step; the internal Cordova project name stays `Outline` because the
 Apple Xcode project depends on it.
 
 ## Windows (.exe) and Linux (.deb)
@@ -81,16 +81,16 @@ npm run action client/electron/build linux -- --arch=x64
 ```
 
 Release builds also need `--buildMode=release --versionName=… --autoUpdateUrl=…`. Outputs are
-named `ProxyGrid-VPN-<version>-<arch>.<ext>`. Windows code signing uses
+named `ProxyGridVPN-<version>-<arch>.<ext>`. Windows code signing uses
 `client/electron/windows/electron_builder_signing_plugin.cjs` with credentials from the CI
-environment. An MSI can be produced with `GRIDVPN_WINDOWS_MSI=1`, but it does not install the TAP
+environment. An MSI can be produced with `PROXYGRIDVPN_WINDOWS_MSI=1`, but it does not install the TAP
 driver yet, so it cannot connect; ship the NSIS `.exe`.
 
 ## CI
 
-`.github/workflows/gridvpn_builds.yml` runs the web and Go tests and builds the Windows and
+`.github/workflows/proxygridvpn_builds.yml` runs the web and Go tests and builds the Windows and
 Android packages on every push to `feat/gridvpn-client`, and release builds for `gridvpn-v*` tags.
-Artifacts are uploaded as `ProxyGrid-VPN-windows-<arch>` and `ProxyGrid-VPN-android`.
+Artifacts are uploaded as `ProxyGridVPN-windows-<arch>` and `ProxyGridVPN-android`.
 
 ## Identity
 

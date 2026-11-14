@@ -110,7 +110,7 @@ export class AboutView extends LitElement {
     `;
   }
 
-  // ProxyGrid VPN is built on the open-source Outline client; the attribution below must stay.
+  // ProxyGridVPN is built on the open-source Outline client; the attribution below must stay.
   private aboutText(): string {
     const args = [
       'productName',
@@ -126,8 +126,8 @@ export class AboutView extends LitElement {
       'gitHubUrl',
       'https://github.com/OutlineFoundation/outline-apps',
     ];
-    const text = this.localize('gridvpn-about', ...args);
-    if (text && text !== 'gridvpn-about') return text;
+    const text = this.localize('proxygridvpn-about', ...args);
+    if (text && text !== 'proxygridvpn-about') return text;
     return (
       `${BRAND.productName} is the VPN app of ${BRAND.platformName}: ${BRAND.tagline} ` +
       'Connect through ProxyGrid regions or bring your own Outline-compatible server. ' +

@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Regenerates every ProxyGrid VPN app icon, tray icon and splash image from the SVG sources in this
+# Regenerates every ProxyGridVPN app icon, tray icon and splash image from the SVG sources in this
 # directory (mark.svg, foreground.svg, glyph.svg). Run from anywhere:
-#   client/resources/gridvpn/generate.sh
+#   client/resources/proxygridvpn/generate.sh
 # Requires node (puppeteer, already a dev dependency), python3, sips and iconutil (macOS).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 CLIENT="$(cd "$HERE/../.." && pwd)"
 RENDER="node $HERE/render.mjs"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/gridvpn-icons.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/proxygridvpn-icons.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
 MARK="$HERE/mark.svg"
@@ -107,4 +107,4 @@ $RENDER "$MARK" 137 "$W/logo-nav.png" 204 "$W/brand-logo-dark.png" 193 "$W/brand
 $RENDER "$MARK" 64 "$TMP/fav64.png" 32 "$TMP/fav32.png" 16 "$TMP/fav16.png"
 python3 "$HERE/make_ico.py" "$CLIENT/web/favicon.ico" "$TMP/fav16.png" "$TMP/fav32.png" "$TMP/fav64.png"
 
-echo "ProxyGrid VPN icons regenerated."
+echo "ProxyGridVPN icons regenerated."

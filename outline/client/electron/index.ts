@@ -152,7 +152,7 @@ function setupTray(): void {
   tray.on('click', () => {
     mainWindow?.show();
   });
-  tray.setToolTip('ProxyGrid VPN');
+  tray.setToolTip('ProxyGridVPN');
   updateTray(TunnelStatus.DISCONNECTED);
 }
 
@@ -490,7 +490,7 @@ function main() {
   // Some APIs can only be used after this event occurs.
   app.on('ready', async () => {
     // To clearly identify app restarts in Sentry.
-    console.info('ProxyGrid VPN is starting');
+    console.info('ProxyGridVPN is starting');
 
     setupMenu();
     setupTray();

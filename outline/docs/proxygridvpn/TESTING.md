@@ -1,8 +1,8 @@
-# ProxyGrid VPN test results (2026-11-14)
+# ProxyGridVPN test results (2026-11-14)
 
 Branch `feat/gridvpn-client`. "Automated" means it runs in `npm run action client/web/test`,
 `go test ./client/go/...`, the Apple `VpnExtensionTest` suite, or CI
-(`.github/workflows/gridvpn_builds.yml`). No live VPN was brought up on a device in this round:
+(`.github/workflows/proxygridvpn_builds.yml`). No live VPN was brought up on a device in this round:
 that changes the machine's routing and needs a key entered by the owner (see "Not yet tested").
 
 ## Shared (all platforms)
@@ -29,7 +29,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGrid-VPN-1.0.0-dev-macos-universal.dmg`, bundle `net.proxygrid.vpn.macos`, app group `group.net.proxygrid.vpn`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider`, URL schemes ss/ssconf/proxygridvpn |
+| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGridVPN-1.0.0-dev-macos-universal.dmg`, bundle `net.proxygrid.vpn.macos`, app group `group.net.proxygrid.vpn`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider`, URL schemes ss/ssconf/proxygridvpn |
 | `VpnExtensionTest` (tunnel settings incl. new IPv6 and DNS routes, error persistence, address selection) | Pass |
 | Connect/disconnect, DNS, sleep/wake, Wi-Fi switch on a real Mac | Not yet tested (needs the owner to add a key and approve live tests) |
 
@@ -37,7 +37,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGrid-VPN-1.0.0-dev-ios.ipa`, bundle `net.proxygrid.vpn.ios`, app group `group.net.proxygrid.vpn` |
+| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGridVPN-1.0.0-dev-ios.ipa`, bundle `net.proxygrid.vpn.ios`, app group `group.net.proxygrid.vpn` |
 | On-device connect, background/foreground, network switching | Not yet tested |
 
 ## Android
@@ -57,17 +57,17 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 ## CI
 
-"ProxyGrid VPN / Builds" on thosuperman/outline-apps, run 43579536163 (commit ebf9c3b6, after the
-rename to ProxyGrid VPN and the identity change): all jobs pass. The Windows jobs also rebuild the
+"ProxyGridVPN / Builds" on thosuperman/outline-apps, run 43579536163 (commit ebf9c3b6, after the
+rename to ProxyGridVPN and the identity change): all jobs pass. The Windows jobs also rebuild the
 routing service and smartdnsblock from source with the new service, pipe and adapter names.
 
 | Job | Result | Artifact |
 |---|---|---|
 | Web and Go tests (Ubuntu) | Pass: 109/109 web specs, all Go packages with `-race` | — |
-| Windows ia32 | Built | `ProxyGrid-VPN-windows-ia32` → `ProxyGrid-VPN-0.0.0-debug-ia32.exe` (unsigned) |
-| Windows helpers | Built from source | `ProxyGrid-VPN-windows-helpers` (OutlineService.exe, smartdnsblock.exe) |
-| Windows arm64 | Built | `ProxyGrid-VPN-windows-arm64` → `ProxyGrid-VPN-0.0.0-debug-arm64.exe` (unsigned) |
-| Android | Built | `ProxyGrid-VPN-android` → `ProxyGrid-VPN-app-debug.apk` (debug-signed) |
+| Windows ia32 | Built | `ProxyGridVPN-windows-ia32` → `ProxyGridVPN-0.0.0-debug-ia32.exe` (unsigned) |
+| Windows helpers | Built from source | `ProxyGridVPN-windows-helpers` (OutlineService.exe, smartdnsblock.exe) |
+| Windows arm64 | Built | `ProxyGridVPN-windows-arm64` → `ProxyGridVPN-0.0.0-debug-arm64.exe` (unsigned) |
+| Android | Built | `ProxyGridVPN-android` → `ProxyGridVPN-app-debug.apk` (debug-signed) |
 
 Earlier runs caught two real test problems (an unhandled rejection in a web spec and the e2e
 cleanup check counting test-server goroutines) and one build bug (the Android label patch

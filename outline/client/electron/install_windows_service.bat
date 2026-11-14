@@ -29,7 +29,7 @@ set PWD=%~dp0%
 
 :: Install and start the service, configuring it to restart on boot.
 :: NOTE: spaces after the arguments are necessary for a correct installation, do not remove!
-%SystemRoot%\System32\sc create ProxyGridVPNService binpath= "\"%PWD%OutlineService.exe\"" displayname= "ProxyGrid VPN Service" start= "auto"
+%SystemRoot%\System32\sc create ProxyGridVPNService binpath= "\"%PWD%OutlineService.exe\"" displayname= "ProxyGridVPN Service" start= "auto"
 %SystemRoot%\System32\net start ProxyGridVPNService
 
 :: This is for the client: sudo-prompt discards stdout/stderr if the script

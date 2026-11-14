@@ -1,4 +1,4 @@
-# ProxyGrid VPN client: stability fixes and root causes
+# ProxyGridVPN client: stability fixes and root causes
 
 Baseline for comparison: stable Outline v1.17.0 (`client_macos/v1.19.1` points to the same
 commit). Each fix below is one commit on `feat/gridvpn-client`. "Regression" means the bug was
