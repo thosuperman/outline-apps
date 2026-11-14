@@ -169,6 +169,13 @@ public class VpnTunnelService extends VpnService {
         return START_NOT_STICKY;
       }
       if (intent.getBooleanExtra(START_LAST_TUNNEL_EXTRA, false)) {
+        // The tile can show OFF while the app is still connecting (the status is only stored on
+        // success). Starting again would tear down and rebuild the connection in progress.
+        if (this.tunnelConfig != null) {
+          LOG.info("Tunnel already active or starting, ignoring tile start.");
+          QuickSettingsTileService.requestTileUpdate(this);
+          return superOnStartReturnValue;
+        }
         startLastSuccessfulTunnel();
         QuickSettingsTileService.requestTileUpdate(this);
         return superOnStartReturnValue;
@@ -307,6 +314,11 @@ public class VpnTunnelService extends VpnService {
     } else {
       LOG.info("Auto-start VPN, skip health check.");
     }
+    if (this.tunFd == null) {
+      // Defensive: the tunnel was torn down while the remote device was being set up.
+      stopRemoteDevice();
+      return new PlatformError(Platerrors.InternalError, "VPN was stopped while connecting");
+    }
 
     final PlatformError err = Tun2socks.goRelayTraffic(this.tunFd.getFd(), this.remoteDevice);
     if (err != null) {
@@ -341,8 +353,16 @@ public class VpnTunnelService extends VpnService {
     return tunnelConfig.id.equals(tunnelId);
   }
 
-  /** Helper method to tear down an active tunnel. */
-  private void tearDownActiveTunnel() {
+  /**
+   * Helper method to tear down an active tunnel.
+   *
+   * <p>Synchronized with {@link #startTunnel}: onRevoke, onDestroy and the tile's stop run on the
+   * main thread and used to interleave with a start that was blocked in the health check (which
+   * now runs after establish()). The start then dereferenced the closed TUN descriptor, or
+   * finished after the teardown and left the network callback registered and the stored status
+   * CONNECTED with no VPN. Now a teardown waits for the start to finish and then undoes it.
+   */
+  private synchronized void tearDownActiveTunnel() {
     // Stop monitoring network changes.
     try {
       final ConnectivityManager connectivityManager =
@@ -435,6 +455,14 @@ public class VpnTunnelService extends VpnService {
   private void startNetworkConnectivityMonitor() {
     final ConnectivityManager connectivityManager =
         (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    // Switching servers reuses the running VPN and calls this again. Unregister first so the
+    // callback is registered once, instead of piling up network requests (and duplicate events)
+    // until the per-app request limit throws mid-connect.
+    try {
+      connectivityManager.unregisterNetworkCallback(networkConnectivityMonitor);
+    } catch (Exception e) {
+      // Not registered yet.
+    }
     NetworkRequest request = new NetworkRequest.Builder()
                                  .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                  .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
@@ -452,15 +480,17 @@ public class VpnTunnelService extends VpnService {
 
   /* Broadcast change in the VPN connectivity. */
   private void broadcastVpnConnectivityChange(TunnelStatus status) {
-    this.tunnelStore.setTunnelStatus(status);
-    QuickSettingsTileService.requestTileUpdate(this);
     // Capture tunnelConfig into a local variable to avoid a TOCTOU race: another thread (e.g.
     // tearDownActiveTunnel) can set the field to null between the null-check and the read below.
     final TunnelConfig config = this.tunnelConfig;
     if (config == null) {
+      // A network callback still in flight after teardown must not store CONNECTED: the tile
+      // would show ON and the next boot would reconnect a tunnel the user stopped.
       LOG.warning("Tunnel disconnected, not sending VPN connectivity broadcast");
       return;
     }
+    this.tunnelStore.setTunnelStatus(status);
+    QuickSettingsTileService.requestTileUpdate(this);
     Intent statusChange = new Intent(STATUS_BROADCAST_KEY);
     statusChange.addCategory(getPackageName());
     // We must explicitly set the package for security reasons: https://developer.android.com/about/versions/14/behavior-changes-14#security

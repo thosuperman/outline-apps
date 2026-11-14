@@ -38,8 +38,12 @@ public class VpnServiceStarter extends BroadcastReceiver {
     }
     
     final VpnTunnelStore tunnelStore = new VpnTunnelStore(context);
+    // RECONNECTING means the tunnel was up but the network was lost (airplane mode, no signal)
+    // when the device shut down or the app was updated; the user never disconnected.
+    final VpnTunnelService.TunnelStatus status = tunnelStore.getTunnelStatus();
     boolean wasConnectedAtShutdown =
-        VpnTunnelService.TunnelStatus.CONNECTED.equals(tunnelStore.getTunnelStatus());
+        VpnTunnelService.TunnelStatus.CONNECTED.equals(status)
+            || VpnTunnelService.TunnelStatus.RECONNECTING.equals(status);
     if (!wasConnectedAtShutdown) {
       return;
     }
