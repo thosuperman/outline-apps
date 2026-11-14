@@ -1,0 +1,157 @@
+# Copyright 2026 ProxyGrid
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# GridVPN client builds: tests, Windows installers and Android packages, uploaded as
+# GridVPN-named artifacts. Apple builds need the Phu Duc signing identity and run locally (see
+# docs/gridvpn/BUILD.md).
+#
+# Signing material only comes from repository secrets and is never written to the repo:
+#   ANDROID_KEY_STORE_CONTENTS (base64 PKCS#12) + ANDROID_KEY_STORE_PASSWORD  -> signed release .aab/.apk
+#   (Windows Authenticode signing is configured in electron/windows/electron_builder_signing_plugin.cjs)
+# ProxyGrid sign-in identifiers come from repository variables (public values):
+#   PROXYGRID_COGNITO_REGION, PROXYGRID_USER_POOL_ID, PROXYGRID_USER_POOL_CLIENT_ID
+name: GridVPN / Builds
+
+concurrency:
+  group: '${{ github.ref }} GridVPN'
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - feat/gridvpn-client
+    tags:
+      - 'gridvpn-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (for example 1.0.0); empty for a debug build'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: outline
+
+env:
+  VERSION_NAME: ${{ inputs.version || (startsWith(github.ref, 'refs/tags/gridvpn-v') && github.ref_name) || '' }}
+  PROXYGRID_COGNITO_REGION: ${{ vars.PROXYGRID_COGNITO_REGION }}
+  PROXYGRID_USER_POOL_ID: ${{ vars.PROXYGRID_USER_POOL_ID }}
+  PROXYGRID_USER_POOL_CLIENT_ID: ${{ vars.PROXYGRID_USER_POOL_CLIENT_ID }}
+
+jobs:
+  test:
+    name: Web and Go tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: outline/.nvmrc
+          cache: npm
+          cache-dependency-path: ./outline/package-lock.json
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
+      - run: npm ci
+      - name: Web tests
+        run: npm run action client/web/test
+      - name: Go tests
+        run: go test -race -count=1 ./client/go/...
+
+  windows:
+    name: Windows ${{ matrix.arch }}
+    needs: test
+    runs-on: windows-2022
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ia32, arm64]
+    steps:
+      - run: git config --system core.longpaths true
+        working-directory: .
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: outline/.nvmrc
+          cache: npm
+          cache-dependency-path: ./outline/package-lock.json
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: '${{ github.workspace }}/outline/go.mod'
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.13.0
+          use-cache: false
+      - run: npm ci
+      # The NSIS .exe installs the TAP driver and routing service. An MSI can be produced with
+      # GRIDVPN_WINDOWS_MSI=1 but cannot connect yet (no TAP driver custom action).
+      - name: Build installer (.exe)
+        shell: bash
+        run: |
+          if [ -n "$VERSION_NAME" ]; then
+            npm run action client/electron/build windows -- --arch ${{ matrix.arch }} \
+              --buildMode=release --versionName="${VERSION_NAME#gridvpn-v}" \
+              --autoUpdateUrl="${{ vars.GRIDVPN_UPDATE_URL || 'https://proxygrid.net/vpn/download/windows/' }}"
+          else
+            npm run action client/electron/build windows -- --arch ${{ matrix.arch }}
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: GridVPN-windows-${{ matrix.arch }}
+          path: outline/output/client/electron/build/*.exe
+          if-no-files-found: error
+
+  android:
+    name: Android
+    needs: test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: outline/.nvmrc
+          cache: npm
+          cache-dependency-path: ./outline/package-lock.json
+      - run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+      - run: npm ci
+      - name: Build (.apk debug, or signed .aab + universal .apk for releases)
+        env:
+          ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+          ANDROID_KEY_STORE_CONTENTS: ${{ secrets.ANDROID_KEY_STORE_CONTENTS }}
+        run: |
+          if [ -n "$VERSION_NAME" ] && [ -n "$ANDROID_KEY_STORE_CONTENTS" ]; then
+            npm run action client/src/cordova/build android -- --buildMode=release \
+              --versionName="${VERSION_NAME#gridvpn-v}" --buildNumber="${{ github.run_number }}"
+          else
+            npm run action client/src/cordova/build android -- --verbose
+          fi
+      - name: Rename artifacts
+        run: |
+          mkdir -p ../gridvpn-android
+          find client/platforms/android -name '*.apk' -o -name '*.aab' -o -name '*.apks' | while read f; do
+            cp "$f" "../gridvpn-android/GridVPN-$(basename "$f")"
+          done
+          ls -la ../gridvpn-android
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: GridVPN-android
+          path: gridvpn-android/*
+          if-no-files-found: error
