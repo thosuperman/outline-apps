@@ -147,6 +147,19 @@ NSString *const kDefaultPathKey = @"defaultPath";
   completionHandler();
 }
 
+# pragma mark - Sleep / wake
+
+// After sleep the proxy may have dropped our UDP associations while the default path stayed the
+// same, so no network-change event fires. Re-run the UDP health check so DNS switches to the
+// right mode (forward or truncate-to-TCP) instead of timing out until the next path change.
+- (void)wake {
+  DDLogInfo(@"Device woke up");
+  if (self.stopped || self.remoteDevice == nil) {
+    return;
+  }
+  [self.remoteDevice notifyNetworkChanged];
+}
+
 # pragma mark - Network
 
 - (void)startRouting:(NEPacketTunnelNetworkSettings *)settings
