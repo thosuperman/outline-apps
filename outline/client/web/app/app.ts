@@ -37,9 +37,40 @@ enum OUTLINE_ACCESS_KEY_SCHEME {
   DYNAMIC = 'ssconf',
 }
 
+/** The app's own URL scheme (see docs/gridvpn/IDENTITY.md). */
+export const APP_URL_SCHEME = 'proxygridvpn';
+
+// Returns the access key carried by an app link, proxygridvpn://add?key=<url-encoded ss:// or
+// ssconf:// key>, or the empty string for other app links (e.g. proxygridvpn://open, which only
+// brings the app to the front). Returns null if the string is not an app link.
+export function unwrapAppLink(possiblyAppLink: string): string | null {
+  if (!possiblyAppLink?.toLowerCase().startsWith(`${APP_URL_SCHEME}:`)) {
+    return null;
+  }
+  try {
+    // Parse as https so URLSearchParams works for the custom scheme.
+    const url = new URL(
+      possiblyAppLink.replace(/^[a-z]+:(\/\/)?/i, 'https://app/')
+    );
+    const action = url.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+    const key = url.searchParams.get('key');
+    if (action === 'add' && key) {
+      return key.trim();
+    }
+  } catch (e) {
+    console.debug('Invalid app link', e);
+  }
+  return '';
+}
+
 // If "possiblyInviteUul" is a URL whose fragment contains a Shadowsocks URL
 // then return that Shadowsocks URL, otherwise return the original string.
+// App links (proxygridvpn://add?key=...) are unwrapped to the key they carry.
 export function unwrapInvite(possiblyInviteUrl: string): string {
+  const appLinkKey = unwrapAppLink(possiblyInviteUrl);
+  if (appLinkKey !== null) {
+    return appLinkKey;
+  }
   try {
     const url = new URL(possiblyInviteUrl);
     if (url.hash) {

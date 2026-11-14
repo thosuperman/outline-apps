@@ -110,7 +110,7 @@ export class AboutView extends LitElement {
     `;
   }
 
-  // GridVPN is built on the open-source Outline client; the attribution below must stay.
+  // ProxyGrid VPN is built on the open-source Outline client; the attribution below must stay.
   private aboutText(): string {
     const args = [
       'productName',

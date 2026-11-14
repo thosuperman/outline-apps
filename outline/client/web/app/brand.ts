@@ -18,7 +18,7 @@
  * configuration (see docs/gridvpn/IDENTITY.md), not here.
  */
 export const BRAND = {
-  productName: 'GridVPN',
+  productName: 'ProxyGrid VPN',
   platformName: 'ProxyGrid',
   tagline: 'Your Network. Your Freedom.',
   websiteUrl: 'https://proxygrid.net/vpn',

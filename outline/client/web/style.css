@@ -31,7 +31,7 @@ body {
   --min-supported-device-width: 320px;
 
   /*
-   * GridVPN design tokens, shared with the ProxyGrid website (frontend/src/theme/theme.js):
+   * ProxyGrid VPN design tokens, shared with the ProxyGrid website (frontend/src/theme/theme.js):
    * "infrastructure ink" neutrals, indigo for the VPN product and emerald for a healthy,
    * connected tunnel. The --outline-* names are kept so existing components pick them up.
    */

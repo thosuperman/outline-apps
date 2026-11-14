@@ -12,7 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {unwrapInvite, isOutlineAccessKey} from './app';
+import {unwrapAppLink, unwrapInvite, isOutlineAccessKey} from './app';
+
+describe('unwrapAppLink', () => {
+  it('extracts the key from proxygridvpn://add', () => {
+    const key = 'ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwdw@203.0.113.5:443#Home';
+    expect(
+      unwrapAppLink(`proxygridvpn://add?key=${encodeURIComponent(key)}`)
+    ).toEqual(key);
+    expect(
+      unwrapAppLink(
+        `proxygridvpn://add/?key=${encodeURIComponent('ssconf://api.proxygrid.net/vpn/c/abc#ProxyGrid Tokyo')}`
+      )
+    ).toEqual('ssconf://api.proxygrid.net/vpn/c/abc#ProxyGrid Tokyo');
+  });
+
+  it('returns an empty string for app links without a key', () => {
+    expect(unwrapAppLink('proxygridvpn://open')).toEqual('');
+    expect(unwrapAppLink('proxygridvpn://add')).toEqual('');
+  });
+
+  it('returns null for other URLs', () => {
+    expect(unwrapAppLink('ss://abc')).toBeNull();
+    expect(unwrapAppLink('https://proxygrid.net/vpn')).toBeNull();
+    expect(unwrapAppLink('')).toBeNull();
+  });
+
+  it('is applied by unwrapInvite', () => {
+    expect(
+      unwrapInvite(`proxygridvpn://add?key=${encodeURIComponent('ss://k@h:1')}`)
+    ).toEqual('ss://k@h:1');
+  });
+});
 
 describe('unwrapInvite', () => {
   it('ignores empty string', () => {

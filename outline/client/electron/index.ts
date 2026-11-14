@@ -152,7 +152,7 @@ function setupTray(): void {
   tray.on('click', () => {
     mainWindow?.show();
   });
-  tray.setToolTip('GridVPN');
+  tray.setToolTip('ProxyGrid VPN');
   updateTray(TunnelStatus.DISCONNECTED);
 }
 
@@ -317,7 +317,7 @@ async function quitApp() {
 
 function interceptShadowsocksLink(argv: string[]) {
   if (argv.length > 1) {
-    const protocols = ['ss://', 'ssconf://'];
+    const protocols = ['ss://', 'ssconf://', 'proxygridvpn://'];
     let url = argv[1];
     for (const protocol of protocols) {
       if (url.startsWith(protocol)) {
@@ -483,13 +483,14 @@ function main() {
 
   app.setAsDefaultProtocolClient('ss');
   app.setAsDefaultProtocolClient('ssconf');
+  app.setAsDefaultProtocolClient('proxygridvpn');
 
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
   app.on('ready', async () => {
     // To clearly identify app restarts in Sentry.
-    console.info('GridVPN is starting');
+    console.info('ProxyGrid VPN is starting');
 
     setupMenu();
     setupTray();

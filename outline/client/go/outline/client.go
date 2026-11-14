@@ -124,7 +124,8 @@ func (c *ClientConfig) new(keyID string, providerClientConfigText string) (*Clie
 			if err != nil {
 				slog.Error("failed to get user config dir", "err", err)
 			} else {
-				clientConfig.DataDir = path.Join(userDir, "org.getoutline.client")
+				// Separate from the official Outline app (org.getoutline.client), so both can be installed.
+				clientConfig.DataDir = path.Join(userDir, "net.proxygrid.vpn")
 			}
 		}
 	}

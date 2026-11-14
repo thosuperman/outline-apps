@@ -345,7 +345,7 @@ func (s *ssServer) serveUDP() {
 
 func ssKey(serverAddr string) string {
 	userInfo := base64.RawURLEncoding.EncodeToString([]byte(e2eCipher + ":" + e2eSecret))
-	return fmt.Sprintf("ss://%s@%s#GridVPN%%20E2E", userInfo, serverAddr)
+	return fmt.Sprintf("ss://%s@%s#ProxyGrid%%20VPN%%20E2E", userInfo, serverAddr)
 }
 
 func newE2EClient(t *testing.T, config string) *Client {

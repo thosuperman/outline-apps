@@ -17,7 +17,7 @@
 usage: python3 rebrand_messages.py <messages-dir> <ProductName> [<OldName>]
 
 Only the *app* name is replaced. References that mean the open-source Outline project or
-Outline-compatible servers stay as they are, because GridVPN's "My Own Server" mode accepts
+Outline-compatible servers stay as they are, because the app's "My Own Server" mode accepts
 standard Outline keys and the Outline Manager: "Outline Manager", "Outline Foundation",
 "Outline server(s)", "Outline VPN server", "Outline key", "Outline access key" and URLs.
 Running it again with a new name moves from <OldName> (default "Outline") to the new name.
@@ -33,7 +33,7 @@ KEEP_FOLLOWERS = [
     'Manager', 'Foundation', 'server', 'servers', 'Server', 'Servers', 'VPN server',
     'VPN servers', 'VPN access key', 'access key', 'key', 'keys', 'team',
 ]
-# Messages that are about the Outline project itself and are no longer shown by GridVPN.
+# Messages that are about the Outline project itself and are no longer shown by the app.
 SKIP_KEYS = {'about-outline'}
 
 
@@ -42,7 +42,11 @@ def rebrand(text: str, old: str, new: str) -> str:
     pattern = re.compile(
         rf'(?<![\w./-]){re.escape(old)}(?![\w-])(?!\.\w)(?!\s+(?:{keep})\b)'
     )
-    return pattern.sub(new, text)
+    out = pattern.sub(new, text)
+    # "Outline VPN ..." in translations would otherwise become "<New> VPN VPN ...".
+    if new.endswith(' VPN'):
+        out = out.replace(new + ' VPN', new)
+    return out
 
 
 def main(directory: str, new: str, old: str = 'Outline') -> None:

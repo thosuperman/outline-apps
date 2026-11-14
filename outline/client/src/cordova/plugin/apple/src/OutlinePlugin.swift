@@ -49,7 +49,7 @@ class OutlinePlugin: CDVPlugin {
   #else
     private static let kPlatform = "iOS"
   #endif
-  private static let kAppGroup = "group.org.getoutline.client"
+  private static let kAppGroup = "group.net.proxygrid.vpn"
 
   override func pluginInitialize() {
     #if DEBUG

@@ -22,12 +22,12 @@ set -eux
 # Grant specific capabilities so Outline can run without root permisssion
 #   - cap_net_admin: configure network interfaces, set up routing tables, etc.
 #   - cap_dac_override: modify network configuration files owned by root
-/usr/sbin/setcap cap_net_admin,cap_dac_override+eip /opt/GridVPN/GridVPN
+/usr/sbin/setcap cap_net_admin,cap_dac_override+eip "/opt/ProxyGrid VPN/proxygrid-vpn"
 
 # From electron's hint:
 #   > The SUID sandbox helper binary was found, but is not configured correctly.
 #   > Rather than run without sandboxing I'm aborting now. You need to make sure
-#   > that /opt/GridVPN/chrome-sandbox is owned by root and has mode 4755.
+#   > that /opt/ProxyGrid VPN/chrome-sandbox is owned by root and has mode 4755.
 #
 # https://github.com/electron/electron/issues/42510
-/usr/bin/chmod 4755 /opt/GridVPN/chrome-sandbox
+/usr/bin/chmod 4755 "/opt/ProxyGrid VPN/chrome-sandbox"

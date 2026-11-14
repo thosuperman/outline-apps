@@ -45,7 +45,7 @@ export const GRIDVPN_MARK = svg`
   </svg>`;
 
 /**
- * The GridVPN home screen: one large connect control, a region picker with live health and the
+ * The ProxyGrid VPN home screen: one large connect control, a region picker with live health and the
  * plan's data usage for ProxyGrid, and the user's own Outline-compatible servers in a second
  * tab (the existing server list is slotted in as "own-servers").
  */

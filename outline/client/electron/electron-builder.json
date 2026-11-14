@@ -1,12 +1,12 @@
 {
-  "productName": "GridVPN",
-  "artifactName": "GridVPN-${version}-${arch}.${ext}",
+  "productName": "ProxyGrid VPN",
+  "artifactName": "ProxyGrid-VPN-${version}-${arch}.${ext}",
   "directories": {
     "buildResources": "output/client/electron",
     "output": "output/client/electron/build"
   },
   "extraMetadata": {
-    "name": "outline-client",
+    "name": "proxygrid-vpn",
     "main": "output/client/electron/index.js"
   },
   "files": [
@@ -27,7 +27,7 @@
   },
   "linux": {
     "category": "Network",
-    "executableName": "GridVPN",
+    "executableName": "proxygrid-vpn",
     "icon": "client/electron/icons/png",
     "maintainer": "ProxyGrid <contact@proxygrid.net>"
   },
@@ -43,5 +43,14 @@
         "sha256"
       ]
     }
-  }
+  },
+  "appId": "net.proxygrid.vpn.desktop",
+  "protocols": [
+    {
+      "name": "ProxyGrid VPN",
+      "schemes": [
+        "proxygridvpn"
+      ]
+    }
+  ]
 }
