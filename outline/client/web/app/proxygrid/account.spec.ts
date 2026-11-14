@@ -270,6 +270,37 @@ describe('ProxyGridAccount', () => {
     );
   });
 
+  it('refuses to connect an existing key suspended for quota', async () => {
+    const {session, account, api, servers} = setup();
+    await session.signIn('a@b.c', 'pw');
+    await account.refresh();
+    await account.ensureRegionServer();
+    await account.refresh(); // let the refresh started by provisioning finish
+    api.status.and.resolveTo(
+      status({
+        regions: [
+          {
+            region: 'ap-northeast-1',
+            label: 'Tokyo',
+            node_id: 'tyo1',
+            node_status: 'active',
+            key: {
+              key_id: 'k1',
+              region: 'ap-northeast-1',
+              status: 'suspended_quota',
+            },
+          },
+        ],
+      })
+    );
+    await account.refresh();
+    await expectAsync(account.ensureRegionServer()).toBeRejectedWithError(
+      /allowance/
+    );
+    expect(servers.servers.length).toEqual(1);
+    expect(api.createKey).toHaveBeenCalledTimes(1);
+  });
+
   it('retries once with a fresh token after a 401', async () => {
     const {session, account, api} = setup();
     await session.signIn('a@b.c', 'pw');

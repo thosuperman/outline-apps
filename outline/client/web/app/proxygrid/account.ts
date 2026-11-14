@@ -218,19 +218,23 @@ export class ProxyGridAccount {
    */
   async ensureRegionServer(): Promise<string> {
     const region = this.state.selectedRegion;
+    const regionStatus = this.state.status?.regions.find(
+      r => r.region === region
+    );
+    // A suspended key fails at the dynamic-key fetch; say why up front instead of retrying.
+    if (isQuotaBlocked(this.state.status, region)) {
+      throw new Error(QUOTA_MESSAGE);
+    }
+    if (regionStatus?.key?.status === 'suspended_admin') {
+      throw new Error(
+        'VPN access for this account is paused. Contact ProxyGrid support.'
+      );
+    }
     const existing = this.findServerForRegion(region);
     if (existing) return existing;
     if (this.session.state.kind !== 'signedIn') {
       throw new Error('Sign in to ProxyGrid first.');
     }
-    if (this.state.status?.over_quota) {
-      throw new Error(
-        'Your data allowance for this period is used up. Upgrade your plan or wait for the next period.'
-      );
-    }
-    const regionStatus = this.state.status?.regions.find(
-      r => r.region === region
-    );
     // Reuse the existing key (key creation is rate limited per day); create one only when
     // the region has none, or the listed key has gone (revoked between refreshes).
     const keyId =
@@ -278,6 +282,20 @@ export class ProxyGridAccount {
   proxyGridServerIds(): Set<string> {
     return new Set(this.proxyGridServers().map(s => s.id));
   }
+}
+
+export const QUOTA_MESSAGE =
+  'Your data allowance for this period is used up. Upgrade your plan or wait for the next period.';
+
+/** True when the plan is over quota or the region's key is suspended for quota. */
+export function isQuotaBlocked(
+  status: VpnStatus | null | undefined,
+  region: string
+): boolean {
+  if (!status) return false;
+  if (status.over_quota) return true;
+  const key = status.regions.find(r => r.region === region)?.key;
+  return key?.status === 'suspended_quota';
 }
 
 function errorMessage(e: unknown): string {

@@ -18,7 +18,10 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {BRAND} from '../../app/brand';
-import type {ProxyGridAccountState} from '../../app/proxygrid/account';
+import {
+  isQuotaBlocked,
+  type ProxyGridAccountState,
+} from '../../app/proxygrid/account';
 import {formatBytes, PROXYGRID_REGIONS} from '../../app/proxygrid/api';
 import {ServerConnectionState} from '../servers_view/server_connection_indicator';
 import type {ServerListItem} from '../servers_view/server_list_item';
@@ -596,7 +599,10 @@ export class HomeView extends LitElement {
       st === ServerConnectionState.CONNECTING ||
       st === ServerConnectionState.RECONNECTING ||
       st === ServerConnectionState.DISCONNECTING;
-    const overQuota = !!this.account?.status?.over_quota;
+    const overQuota = isQuotaBlocked(
+      this.account?.status,
+      this.account?.selectedRegion ?? ''
+    );
     const region =
       PROXYGRID_REGIONS.find(r => r.region === this.account?.selectedRegion)
         ?.label ?? '';
