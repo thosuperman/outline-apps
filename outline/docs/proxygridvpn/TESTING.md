@@ -1,82 +1,60 @@
 # ProxyGridVPN test results (2026-11-14)
 
-Branch `feat/gridvpn-client`. "Automated" means it runs in `npm run action client/web/test`,
-`go test ./client/go/...`, the Apple `VpnExtensionTest` suite, or CI
-(`.github/workflows/proxygridvpn_builds.yml`). No live VPN was brought up on a device in this round:
-that changes the machine's routing and needs a key entered by the owner (see "Not yet tested").
+Branch `feat/gridvpn-client`. Status words follow the launch brief: **verified** (tested with a
+recorded result), **partially verified** (automated or build-level evidence only), **untested**.
+No live VPN tunnel has been brought up on a device yet: that changes routing, needs keys entered
+by the owner, and the owner asked not to run network tests while they work.
 
-## Shared (all platforms)
+## Summary per platform
+
+| Platform | Build | Status | What is verified | What is not |
+|---|---|---|---|---|
+| macOS | Signed (development) universal `.dmg`, VPN extension, app group | **Partially verified** | Builds and signs with `net.proxygrid.vpn.macos`; signature verifies; `VpnExtensionTest` passes; shared Go/web tests | Live connect, DNS, sleep/wake, Wi-Fi switch; public Developer ID `.dmg` blocked (BLOCKERS.md) |
+| iOS | Signed (development) `.ipa`, 3 devices | **Partially verified** | Builds, archives and exports with `net.proxygrid.vpn.ios`; shared tests | On-device connect, background/foreground, network switch; App Store build blocked |
+| Android | Debug `.apk` (CI) | **Partially verified** | Builds in CI with `net.proxygrid.vpn`; shared tests | Device or emulator run; release `.aab` blocked on keystore |
+| Windows | Unsigned NSIS `.exe` ia32 + arm64 (CI); helpers rebuilt from source | **Partially verified** | Builds in CI; helpers compiled with the new names; shared tests | Install and connect on Windows; signing; `.msi` blocked |
+| Shared Go core | — | **Verified** (automated) | See below | — |
+| Web UI | — | **Verified** (automated + visual check in browser) | See below | Real Cognito sign-in (backend not deployed) |
+
+## Automated tests (verified)
 
 | Area | Test | Result |
 |---|---|---|
-| Outline key compatibility | SIP002 `ss://`, legacy base64 `ss://`, YAML dynamic-key config through a real Shadowsocks server (`TestE2E_OutlineKeyFormats`) | Pass |
-| Wrong credentials | Key with a wrong secret gets no data through (`TestE2E_WrongSecretIsRejected`) | Pass |
-| TCP | 280 KB echo through Shadowsocks, AEAD chunking (`TestE2E_TCPAndUDPRelay`) | Pass |
+| Outline key compatibility | SIP002 `ss://`, legacy base64 `ss://` (incl. padded and standard-alphabet), YAML dynamic-key config through a real Shadowsocks server (`TestE2E_OutlineKeyFormats`, `configregistry`) | Pass |
+| Wrong credentials | A key with a wrong secret gets no data through | Pass |
+| TCP | ~500 KB echo through Shadowsocks, AEAD chunking | Pass |
 | UDP | Datagram echo through Shadowsocks | Pass |
-| DNS | Query to the link-local interceptor `169.254.113.53` answered, ID kept, source preserved (`TestE2E_DNSInterceptedAtLinkLocalAddress`) | Pass |
-| DNS under bursts | 20 overlapping copies of one query reach the resolver once; all 20 answered (`TestE2E_DNSRetransmissionsShareOneExchange`) | Pass |
-| DNS dedup/retry unit tests | 19 cases incl. cancellation, timeouts, invalid responses, goroutine leaks (`dnsx`) | Pass |
-| DNS interceptor wiring | Dedup + retry over the packet relay (`configregistry`) | Pass |
-| Network interruption / reconnection | Server goes down, traffic fails, server returns on the same address, client recovers without being recreated (`TestE2E_ReconnectsAfterServerRestart`) | Pass |
-| Resource cleanup | 5 session start/stop cycles return to the goroutine baseline (`TestE2E_SessionCleanupReleasesGoroutines`) | Pass (after making the test server expire idle associations) |
-| Packet relay | Drops rejected packets and continues, survives transient read errors, stops on close, gives up on persistent errors (`vpn/relay_test.go`) | Pass |
-| All Go packages | `go test -race ./client/go/...` | Pass locally (macOS) and in CI (Linux) |
-| Web UI | 109 Jasmine specs in headless Chromium, incl. 44 new: `proxygridvpn://` app links, Cognito SRP proof checked against a server-side SRP implementation, Cognito flows, ProxyGrid API shapes and errors, session refresh (single-flight, revoked vs offline), account provisioning (reuse key, over quota, 401 retry, sign-out keeps own servers), keychain storage migration and write-through | Pass (local and CI) |
-| Quota handling | Over-quota status blocks provisioning with an explanation; UI disables connect and links to upgrade; the backend's dynamic key also returns the "data limit reached" message | Pass (unit + visual check in browser) |
-| Concurrency | Concurrent token refresh shares one request; identical DNS queries share one exchange; Electron starts serialized (code review) | Pass (unit) |
-
-## macOS
-
-| Area | Result |
-|---|---|
-| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGridVPN-1.0.0-dev-macos-universal.dmg`, bundle `net.proxygrid.vpn.macos`, app group `group.net.proxygrid.vpn`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider`, URL schemes ss/ssconf/proxygridvpn |
-| `VpnExtensionTest` (tunnel settings incl. new IPv6 and DNS routes, error persistence, address selection) | Pass |
-| Connect/disconnect, DNS, sleep/wake, Wi-Fi switch on a real Mac | Not yet tested (needs the owner to add a key and approve live tests) |
-
-## iOS
-
-| Area | Result |
-|---|---|
-| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGridVPN-1.0.0-dev-ios.ipa`, bundle `net.proxygrid.vpn.ios`, app group `group.net.proxygrid.vpn` |
-| On-device connect, background/foreground, network switching | Not yet tested |
-
-## Android
-
-| Area | Result |
-|---|---|
-| Build (CI) | Built: debug `.apk` (release `.aab` needs the keystore secrets) |
-| Lifecycle fixes (teardown lock, stored status, callback re-registration, tile start) | Code review against the audit; no device test |
-| On-device connect, Doze, reboot restore, Quick Settings tile | Not yet tested (no Android device or emulator run in this round) |
-
-## Windows
-
-| Area | Result |
-|---|---|
-| Build (CI, NSIS `.exe`, ia32 and arm64) | Built, unsigned (no Authenticode certificate configured) |
-| Relay-exit restart, DNS via link-local resolver, connect/disconnect races, sleep/resume | Code review; `go vet` on the host; no Windows machine test |
+| DNS | Query to `169.254.113.53` answered, ID kept, source preserved | Pass |
+| DNS bursts (RFC 5452 intact) | 20 overlapping copies: resolver hit once (was 20 before the fix), all answered; distinct queries keep their own socket | Pass |
+| Network change | Stale UDP check cannot override a newer one (fails before the fix) | Pass |
+| Interruption / reconnection | Server down then back on the same address: client recovers without being recreated | Pass |
+| Resource cleanup | 5 session cycles return to the goroutine baseline | Pass |
+| Packet relay | Drop-and-continue, transient errors, close handling (3 cases fail before the fix) | Pass |
+| All Go packages | `go test -race ./client/go/...` | Pass (macOS local, Linux CI) |
+| Apple | `VpnExtensionTest` (routes incl. IPv6 and DNS /32, error persistence, address selection) | Pass |
+| Web UI | 110 Jasmine specs: Cognito SRP proof checked against a server-side SRP implementation, Cognito flows, ProxyGrid API, session refresh, account provisioning, quota, keychain storage, `proxygridvpn://` links, Mode B keys never sent to ProxyGrid | Pass (local and CI) |
 
 ## CI
 
-"ProxyGridVPN / Builds" on thosuperman/outline-apps, run 43579536163 (commit ebf9c3b6, after the
-rename to ProxyGridVPN and the identity change): all jobs pass. The Windows jobs also rebuild the
-routing service and smartdnsblock from source with the new service, pipe and adapter names.
+Workflow "ProxyGridVPN / Builds" on thosuperman/outline-apps. The latest run is recorded in the
+final report and the GitHub Actions page; artifacts: `ProxyGridVPN-windows-ia32`,
+`ProxyGridVPN-windows-arm64`, `ProxyGridVPN-windows-helpers`, `ProxyGridVPN-android`.
 
-| Job | Result | Artifact |
-|---|---|---|
-| Web and Go tests (Ubuntu) | Pass: 109/109 web specs, all Go packages with `-race` | — |
-| Windows ia32 | Built | `ProxyGridVPN-windows-ia32` → `ProxyGridVPN-0.0.0-debug-ia32.exe` (unsigned) |
-| Windows helpers | Built from source | `ProxyGridVPN-windows-helpers` (OutlineService.exe, smartdnsblock.exe) |
-| Windows arm64 | Built | `ProxyGridVPN-windows-arm64` → `ProxyGridVPN-0.0.0-debug-arm64.exe` (unsigned) |
-| Android | Built | `ProxyGridVPN-android` → `ProxyGridVPN-app-debug.apk` (debug-signed) |
+## Device test checklist (untested; needs the owner)
 
-Earlier runs caught two real test problems (an unhandled rejection in a web spec and the e2e
-cleanup check counting test-server goroutines) and one build bug (the Android label patch
-targeted `strings.xml` instead of `cdv_strings.xml`); all three are fixed.
+Run on each platform with one ProxyGrid key (Mode A, once the backend is live) and one own
+Outline key (Mode B). Record pass/fail and timings; compare with v1.17.0 on the same Mac/network.
 
-## Not yet tested (needs the owner)
-
-- Any live tunnel on a real device or computer (routing changes; the owner enters keys).
-- ProxyGrid sign-in against the real Cognito pool (identifiers not configured in builds yet; the
-  backend is not deployed, so `/vpn/*` endpoints and dynamic keys cannot be exercised).
-- Side-by-side install with the official Outline app (identifiers and Windows/Linux system names are
-  now distinct; not yet tried on a machine).
+1. Install beside the official Outline app; both launch; neither breaks the other.
+2. Connect / disconnect 10 times; status always matches reality (`curl https://ifconfig.co` shows
+   the server IP when Connected, the local IP when Disconnected).
+3. DNS: `dig example.com` works; 100 parallel lookups succeed (burst).
+4. TCP and UDP: browse; a UDP app or `dig @1.1.1.1` through the tunnel.
+5. Switch Wi-Fi ↔ cellular/Ethernet while connected; time to recover.
+6. macOS: sleep 5 minutes, wake; traffic resumes without user action.
+7. Mobile: background the app 10 minutes, foreground; status and traffic correct.
+8. Kill the server (or block it) for 30 s; client shows reconnecting, recovers when back.
+9. Leave connected 1 hour; no memory growth in the extension/service (Activity Monitor / adb
+   `dumpsys meminfo` / Task Manager).
+10. Mode B with no ProxyGrid account and no network access to proxygrid.net: own keys still
+    connect.

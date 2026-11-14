@@ -169,6 +169,36 @@ introduced after v1.17.0; "pre-existing" means v1.17.0 had it too.
   was never re-checked while server-side associations may have expired.
 - **Fix:** `wake()` notifies the remote device of a network change.
 
+## Evidence
+
+"Before" means the code at the start of this branch (upstream master, which v1.18+ releases are
+built from); v1.17.0 is checked out at `/Volumes/DATA/Working/outline/outline-v117` for source
+comparison. "Fails before" means the test was run against the old code on 2026-11-14 and failed,
+then passed with the fix.
+
+| Fix | vs v1.17.0 | Proof |
+|---|---|---|
+| DNS dedup + bounded retry (RFC 5452 unchanged) | regression (#2777) | `TestE2E_DNSRetransmissionsShareOneExchange` with a real Shadowsocks server: **before 20/20 copies reached the resolver (20 associations), after 1/20**, all 20 answered with their own IDs. 19 `dnsx` unit tests incl. response validation. Each distinct query still opens its own association (`TestOutlineDNS_DistinctQueriesKeepTheirOwnSocket`). |
+| Latest UDP check wins | regression | `TestOutlineDNS_StaleUDPCheckDoesNotOverrideNewerResult` **fails before** (DNS stuck in truncate mode), passes after. |
+| Relay drops bad packets, survives transient errors | regression | `vpn/relay_test.go`: **3 of 5 cases fail before** (single `io.Copy`), all pass after. |
+| Legacy padded `ss://` keys | same bug in v1.17.0 | New `configregistry` tests; found by the e2e suite. |
+| Windows tun2socks exits when relay dies | regression | Source comparison: v1.17.0 `main.go` exits on copy error; master waits only for a signal. `go vet` only (needs Windows to run). |
+| Windows DNS via link-local resolver | regression | Source comparison: `tun.OpenTunDevice` pushes `-tunDNS` over DHCP (go-tun2socks `tun_windows.go:214`), the interceptor only answers `169.254.113.53`. Not run on Windows. |
+| Electron connect/disconnect races, restart queue, listener leak, auto-restart | pre-existing | Code review against the audit; type-checked; no Electron test harness exists. |
+| Android teardown lock, status, callbacks, tile | regression | Code review; Android builds in CI; no device run. |
+| Apple stale device, stop race, wake, interface crash, observer hangs | mixed | `VpnExtensionTest` passes (routes incl. new IPv6 and DNS /32); macOS and iOS build and sign. No device run. |
+| IPv6 leak (Apple) | pre-existing | `VpnExtensionTest` asserts the IPv6 default route; lwIP is built with `LWIP_IPV6 1`. |
+
+Earlier on-device evidence (Mac A, 2026-11-12/13, recorded in the project notes): with the
+upstream client, a DNS burst tripped the server's UDP flow limit and lookups failed; shared-flow
+and DNS-over-TCP prototypes recovered (burst 119/120, Wi-Fi recovery 4–7 s). Those prototypes were
+dropped for RFC 5452 reasons; the dedup exchanger that replaced them has not yet been measured on a
+device.
+
+**Not yet measured on devices** (needs the owner's OK and keys): crash counts, status accuracy
+over long sessions, Wi-Fi/cellular switching, macOS sleep/wake, mobile background/foreground, and
+v1.17.0 side-by-side timing. The checklist is in TESTING.md.
+
 ## Known remaining gaps
 
 - The SDK reports some IPv4 UDP sources in IPv4-mapped form (`::ffff:a.b.c.d`); it is the same
