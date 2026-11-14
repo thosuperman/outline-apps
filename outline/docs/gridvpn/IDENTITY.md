@@ -7,7 +7,10 @@ them makes upstream fixes easy to merge.
 
 > Status: the identifiers below are the proposal. They are applied only after the product name
 > is confirmed (see "Naming check" below), because bundle IDs and package names cannot be
-> changed after a store listing exists.
+> changed after a store listing exists. Apply them in one step with
+> `client/resources/gridvpn/apply_identity.sh <apple-prefix> <android-id> <desktop-app-id>`
+> (Apple, Android and desktop app IDs and the Apple app group); the Windows service and TAP
+> device names are a separate change.
 
 | Platform | Outline (upstream) | GridVPN (proposed) | Where it is set |
 |---|---|---|---|
