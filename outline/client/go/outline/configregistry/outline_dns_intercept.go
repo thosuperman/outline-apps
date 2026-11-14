@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"localhost/client/go/outline/connectivity"
+	"localhost/client/go/outline/dnsx"
 
 	"golang.getoutline.org/sdk/network/dnsintercept"
 	"golang.getoutline.org/sdk/network/dnstruncate"
@@ -71,7 +72,15 @@ func wrapTransportPairWithOutlineDNS(sd *Dialer[transport.StreamConn], pl *Packe
 	if err != nil {
 		return nil, fmt.Errorf("failed to create DNS PacketRelay: %w", err)
 	}
-	relayForward := dnsintercept.NewInterceptDNSPacketRelay(dnsListener, baseListener, linkLocalDNS, remoteDNS)
+	// Each distinct query keeps its own short-lived association, so the proxy sends it from a
+	// fresh, unpredictable source port (RFC 5452). Copies of a query in flight, such as OS
+	// retransmissions, share one exchange instead of opening one association each, and unanswered
+	// queries are retried a bounded number of times.
+	dnsExchanger := dnsx.NewDedupExchanger(
+		dnsx.NewRetryExchanger(dnsintercept.NewPacketRelayExchanger(dnsListener, remoteDNS),
+			dnsx.RetryOptions{Attempts: 3, Interval: time.Second}),
+		dnsx.DedupOptions{Timeout: 5 * time.Second})
+	relayForward := dnsintercept.New(baseListener, linkLocalDNS, dnsExchanger)
 	// Truncate relay: intercept DNS at link-local address, return truncated response (forces TCP retry).
 	// Non-DNS traffic passes through to baseListener.
 	dnsTruncRelay, err := dnstruncate.NewPacketRelay()
