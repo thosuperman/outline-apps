@@ -15,7 +15,11 @@
 -->
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="org.outline.android.client" version="0.0.0-debug" android-versionCode="1" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>GridVPN</name>
+    <!-- Internal Cordova project name: the Apple Xcode project (Outline.xcodeproj) and build
+         scripts depend on it. The name users see is set per platform: Info.plist
+         (CFBundleDisplayName) on Apple, and the app label patched in by setup.action.mjs
+         (APP_DISPLAY_NAME) on Android. -->
+    <name>Outline</name>
     <description>
         GridVPN by ProxyGrid. Your Network. Your Freedom.
     </description>

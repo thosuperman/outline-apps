@@ -77,12 +77,41 @@ export async function main(...parameters) {
   }
 }
 
+// The name users see. config.xml keeps the internal Cordova project name "Outline".
+const APP_DISPLAY_NAME = 'GridVPN';
+
+// Sets the Android app and launcher labels, which Cordova derives from config.xml <name>.
+async function setAndroidDisplayName() {
+  await makeReplacements([
+    {
+      files: path.join(
+        getRootDir(),
+        'client',
+        'platforms',
+        'android',
+        'app',
+        'src',
+        'main',
+        'res',
+        'values',
+        'strings.xml'
+      ),
+      from: [
+        /<string name="app_name">[^<]*<\/string>/,
+        /<string name="launcher_name">[^<]*<\/string>/,
+      ],
+      to: match => match.replace(/>[^<]*</, `>${APP_DISPLAY_NAME}<`),
+    },
+  ]);
+}
+
 async function androidDebug(verbose) {
   await cordova.prepare({
     platforms: ['android'],
     save: false,
     verbose,
   });
+  await setAndroidDisplayName();
 }
 
 async function androidRelease(versionName, buildNumber, verbose) {
@@ -108,6 +137,8 @@ async function androidRelease(versionName, buildNumber, verbose) {
     '**',
     'config.xml'
   );
+
+  await setAndroidDisplayName();
 
   await makeReplacements([
     {
