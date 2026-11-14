@@ -181,16 +181,36 @@ func main() {
 		}, exitCodeFailure)
 	}
 
-	go vpn.RelayTraffic(tunDevice, remoteDevice.ReadWriteCloser)
-	go vpn.RelayTraffic(remoteDevice.ReadWriteCloser, tunDevice)
+	// Either relay returning means the tunnel is dead (for example the TAP device was reset across
+	// sleep/resume). Exit with an error so the Electron side sees the process end and restarts it;
+	// staying alive would leave the routes pointing at a device nobody reads.
+	relayDone := make(chan struct{}, 2)
+	go func() {
+		vpn.RelayTraffic(tunDevice, remoteDevice.ReadWriteCloser)
+		relayDone <- struct{}{}
+	}()
+	go func() {
+		vpn.RelayTraffic(remoteDevice.ReadWriteCloser, tunDevice)
+		relayDone <- struct{}{}
+	}()
 
 	// This message is used in TypeScript to determine whether tun2socks has been started successfully
 	logger.Info("tun2socks running...")
 
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
-	sig := <-osSignals
-	logger.Debug("Received signal", "signal", sig)
+	select {
+	case sig := <-osSignals:
+		logger.Debug("Received signal", "signal", sig)
+	case <-relayDone:
+		tunDevice.Close()
+		remoteDevice.Close()
+		client.EndSession()
+		printErrorAndExit(platerrors.PlatformError{
+			Code:    platerrors.DataTransmissionFailed,
+			Message: "tunnel traffic relay stopped",
+		}, exitCodeFailure)
+	}
 }
 
 func setLogLevel(level string) {
