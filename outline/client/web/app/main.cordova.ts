@@ -31,6 +31,7 @@ import {VpnApi} from './outline_server_repository/vpn';
 import {CordovaVpnApi} from './outline_server_repository/vpn.cordova';
 import {OutlinePlatform} from './platform';
 import {OUTLINE_PLUGIN_NAME, pluginExec} from './plugin.cordova';
+import {SecretBackend} from './secure_storage';
 import {AbstractUpdater} from './updater';
 import * as interceptors from './url_interceptor';
 import {NoOpVpnInstaller, VpnInstaller} from './vpn_installer';
@@ -129,6 +130,19 @@ class CordovaPlatform implements OutlinePlatform {
 
   getVpnServiceInstaller(): VpnInstaller {
     return new NoOpVpnInstaller();
+  }
+
+  getSecretBackend(): SecretBackend | undefined {
+    if (!hasDeviceSupport) {
+      return undefined;
+    }
+    return {
+      get: async (name: string) =>
+        (await pluginExec<string | null>('secretGet', name)) ?? null,
+      set: (name: string, value: string) =>
+        pluginExec<void>('secretSet', name, value),
+      remove: (name: string) => pluginExec<void>('secretRemove', name),
+    };
   }
 
   quitApplication() {

@@ -24,6 +24,7 @@ import {getLocalizationFunction, main} from './main';
 import {installDefaultMethodChannel, MethodChannel} from './method_channel';
 import {VpnApi} from './outline_server_repository/vpn';
 import {ElectronVpnApi} from './outline_server_repository/vpn.electron';
+import {SecretBackend} from './secure_storage';
 import {AbstractUpdater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
 import {VpnInstaller} from './vpn_installer';
@@ -149,6 +150,33 @@ class ElectronMethodChannel implements MethodChannel {
 
 installDefaultMethodChannel(new ElectronMethodChannel());
 
+// Secrets are encrypted in the main process with Electron's safeStorage (DPAPI, Keychain or
+// libsecret). See electron/secret_store.ts.
+const electronSecretBackend: SecretBackend = {
+  async get(name: string) {
+    const out = await window.electron.methodChannel.invoke(
+      'invoke-method',
+      'SecretGet',
+      JSON.stringify({name})
+    );
+    return (JSON.parse(out) as {value: string | null}).value;
+  },
+  async set(name: string, value: string) {
+    await window.electron.methodChannel.invoke(
+      'invoke-method',
+      'SecretSet',
+      JSON.stringify({name, value})
+    );
+  },
+  async remove(name: string) {
+    await window.electron.methodChannel.invoke(
+      'invoke-method',
+      'SecretRemove',
+      JSON.stringify({name})
+    );
+  },
+};
+
 main({
   getVpnApi(): VpnApi | undefined {
     if (isOsSupported) {
@@ -161,4 +189,5 @@ main({
   getUpdater: () => new ElectronUpdater(),
   getVpnServiceInstaller: () => new ElectronVpnInstaller(),
   quitApplication: () => window.electron.methodChannel.send('quit-app'),
+  getSecretBackend: () => electronSecretBackend,
 }).catch(console.error);

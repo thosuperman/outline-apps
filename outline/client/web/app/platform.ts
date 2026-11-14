@@ -15,6 +15,7 @@
 import {Clipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
 import {VpnApi} from './outline_server_repository/vpn';
+import {SecretBackend} from './secure_storage';
 import {Updater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
 import {VpnInstaller} from './vpn_installer';
@@ -36,4 +37,8 @@ export interface OutlinePlatform {
   getVpnServiceInstaller(): VpnInstaller;
 
   quitApplication(): void;
+
+  // OS keychain/keystore for access keys and the account session. Undefined when the platform
+  // has none (browser dev build); local storage is used then.
+  getSecretBackend?(): SecretBackend | undefined;
 }

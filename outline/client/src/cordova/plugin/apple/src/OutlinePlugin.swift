@@ -19,6 +19,7 @@ import OutlineError
 import OutlineNotification
 import OutlineSentryLogger
 import OutlineTunnel
+import Security
 import Sentry
 import Tun2socks
 
@@ -381,6 +382,76 @@ class OutlinePlugin: CDVPlugin {
       callbackId: callbackId,
       keepCallback: true
     )
+  }
+
+  // MARK: - Secret storage (Keychain)
+
+  // Access keys and the account refresh token are kept in the Keychain rather than in the web
+  // view's local storage. Items are device-only and readable after the first unlock, so
+  // on-demand reconnects after a reboot can still read them.
+  private static let kSecretService =
+    (Bundle.main.bundleIdentifier ?? "app") + ".secrets"
+
+  private func secretQuery(_ name: String) -> [String: Any] {
+    return [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: OutlinePlugin.kSecretService,
+      kSecAttrAccount as String: name,
+    ]
+  }
+
+  func secretGet(_ command: CDVInvokedUrlCommand) {
+    guard let name = command.argument(at: 0) as? String else {
+      return sendError("Missing secret name", callbackId: command.callbackId)
+    }
+    var query = secretQuery(name)
+    query[kSecReturnData as String] = true
+    query[kSecMatchLimit as String] = kSecMatchLimitOne
+    var item: CFTypeRef?
+    let status = SecItemCopyMatching(query as CFDictionary, &item)
+    if status == errSecItemNotFound {
+      let result = CDVPluginResult(status: CDVCommandStatus_OK)
+      return self.send(pluginResult: result, callbackId: command.callbackId, keepCallback: false)
+    }
+    guard status == errSecSuccess, let data = item as? Data,
+          let value = String(data: data, encoding: .utf8) else {
+      return sendError("Keychain read failed: \(status)", callbackId: command.callbackId)
+    }
+    sendSuccess(value, callbackId: command.callbackId)
+  }
+
+  func secretSet(_ command: CDVInvokedUrlCommand) {
+    guard let name = command.argument(at: 0) as? String,
+          let value = command.argument(at: 1) as? String else {
+      return sendError("Missing secret name or value", callbackId: command.callbackId)
+    }
+    let data = Data(value.utf8)
+    let query = secretQuery(name)
+    let attributes: [String: Any] = [
+      kSecValueData as String: data,
+      kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+    ]
+    var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+    if status == errSecItemNotFound {
+      var add = query
+      add.merge(attributes) { _, new in new }
+      status = SecItemAdd(add as CFDictionary, nil)
+    }
+    guard status == errSecSuccess else {
+      return sendError("Keychain write failed: \(status)", callbackId: command.callbackId)
+    }
+    sendSuccess(callbackId: command.callbackId)
+  }
+
+  func secretRemove(_ command: CDVInvokedUrlCommand) {
+    guard let name = command.argument(at: 0) as? String else {
+      return sendError("Missing secret name", callbackId: command.callbackId)
+    }
+    let status = SecItemDelete(secretQuery(name) as CFDictionary)
+    guard status == errSecSuccess || status == errSecItemNotFound else {
+      return sendError("Keychain delete failed: \(status)", callbackId: command.callbackId)
+    }
+    sendSuccess(callbackId: command.callbackId)
   }
 
   // MARK: - Callback helpers

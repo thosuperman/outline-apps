@@ -86,6 +86,9 @@
     <source-file
       src="android/java/org/outline/OutlinePlugin.java"
       target-dir="app/src/main/java/org/outline" />
+    <source-file
+      src="android/java/org/outline/SecretStore.java"
+      target-dir="app/src/main/java/org/outline" />
     <resource-file src="android/res/" target="res/" />
     <framework src="android/build-extras.gradle" custom="true" type="gradleReference" />
   </platform>

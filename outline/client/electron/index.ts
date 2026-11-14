@@ -37,6 +37,7 @@ import {lookupIp} from './connectivity';
 import {invokeGoMethod} from './go_plugin';
 import {GoVpnTunnel} from './go_vpn_tunnel';
 import {installRoutingServices, RoutingDaemon} from './routing_service';
+import {getSecret, removeSecret, setSecret} from './secret_store';
 import {TunnelStore} from './tunnel_store';
 import {closeVpn, establishVpn, onVpnStateChanged} from './vpn_service';
 import {VpnTunnel} from './vpn_tunnel';
@@ -600,6 +601,26 @@ function main() {
             }
             return '';
           });
+        }
+
+        case 'SecretGet': {
+          const {name} = JSON.parse(params) as {name: string};
+          return JSON.stringify({value: await getSecret(name)});
+        }
+
+        case 'SecretSet': {
+          const {name, value} = JSON.parse(params) as {
+            name: string;
+            value: string;
+          };
+          await setSecret(name, value);
+          return '';
+        }
+
+        case 'SecretRemove': {
+          const {name} = JSON.parse(params) as {name: string};
+          await removeSecret(name);
+          return '';
         }
 
         case 'StopProxying':

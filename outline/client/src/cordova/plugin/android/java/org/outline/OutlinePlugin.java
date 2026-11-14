@@ -64,6 +64,9 @@ public class OutlinePlugin extends CordovaPlugin {
     IS_RUNNING("isRunning"),
     INIT_ERROR_REPORTING("initializeErrorReporting"),
     REPORT_EVENTS("reportEvents"),
+    SECRET_GET("secretGet"),
+    SECRET_SET("secretSet"),
+    SECRET_REMOVE("secretRemove"),
     QUIT("quitApplication");
 
     private final static Map<String, Action> actions = new HashMap<>();
@@ -231,6 +234,17 @@ public class OutlinePlugin extends CordovaPlugin {
           // Treat failures to initialize error reporting as unexpected by propagating exceptions.
           SentryErrorReporter.init(getBaseContext(), errorReportingApiKey);
           vpnTunnelService.initErrorReporting(errorReportingApiKey);
+          callback.success();
+        } else if (Action.SECRET_GET.is(action)) {
+          final String value = new SecretStore(getBaseContext()).get(args.getString(0));
+          callback.sendPluginResult(value == null
+              ? new PluginResult(PluginResult.Status.OK, (String) null)
+              : new PluginResult(PluginResult.Status.OK, value));
+        } else if (Action.SECRET_SET.is(action)) {
+          new SecretStore(getBaseContext()).set(args.getString(0), args.getString(1));
+          callback.success();
+        } else if (Action.SECRET_REMOVE.is(action)) {
+          new SecretStore(getBaseContext()).remove(args.getString(0));
           callback.success();
         } else if (Action.REPORT_EVENTS.is(action)) {
           final String uuid = args.getString(0);
