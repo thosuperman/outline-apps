@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"math/rand/v2"
 	"net/netip"
+	"sync/atomic"
 	"time"
 
 	"localhost/client/go/outline/connectivity"
@@ -94,9 +95,19 @@ func wrapTransportPairWithOutlineDNS(sd *Dialer[transport.StreamConn], pl *Packe
 		return nil, fmt.Errorf("failed to create delegate PacketRelay: %w", err)
 	}
 
+	// Each network change starts a UDP check that can take seconds. Checks started on an older
+	// network can finish after newer ones, so only the most recent check may switch the relay;
+	// otherwise a stale failure would leave DNS in truncate mode on a healthy network.
+	var checkGen atomic.Uint64
 	onNetworkChanged := func() {
+		gen := checkGen.Add(1)
 		go func() {
-			if err := connectivity.CheckUDPConnectivity(pl); err == nil {
+			err := connectivity.CheckUDPConnectivity(pl)
+			if checkGen.Load() != gen {
+				slog.Debug("discarding superseded UDP check", "err", err)
+				return
+			}
+			if err == nil {
 				slog.Info("remote device UDP is healthy")
 				relayMain.SetRelay(relayForward)
 			} else {
