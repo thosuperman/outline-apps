@@ -18,6 +18,9 @@ import {OperationTimedOut} from '@outline/infrastructure/timeout_promise';
 import {Clipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
 import * as config from './outline_server_repository/config';
+import {ProxyGridAccount} from './proxygrid/account';
+import {isProxyGridKey} from './proxygrid/api';
+import {ProxyGridSession} from './proxygrid/session';
 import {Settings, SettingsKey, Appearance} from './settings';
 import {Updater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
@@ -718,6 +721,10 @@ export class App {
     const server = event.server;
     console.debug('Server added');
     this.syncServersToUI();
+    if (this.isProxyGridServer(server.id)) {
+      // Provisioned from the ProxyGrid tab; the connect flow reports the outcome.
+      return;
+    }
     this.changeToDefaultPage();
     this.rootEl.showToast(
       this.localize('server-added', 'serverName', server.name)
@@ -802,11 +809,137 @@ export class App {
   }
 
   private syncServersToUI() {
+    if (this.proxyGrid) {
+      this.rootEl.proxyGridServerIds = Array.from(
+        this.proxyGrid.proxyGridServerIds()
+      );
+    }
     this.rootEl.servers = this.serverRepo
       .getAll()
       .map(this.makeServerListItem.bind(this));
     this.syncConnectivityStateToServerCards();
   }
+
+  //#region ProxyGrid
+
+  private proxyGrid?: ProxyGridAccount;
+
+  private isProxyGridServer(serverId: string): boolean {
+    const key = this.serverRepo.getAccessKey(serverId);
+    return !!key && isProxyGridKey(key);
+  }
+
+  /**
+   * Enables the ProxyGrid tab: account sign-in, region picker, plan usage and one-tap connect.
+   * ProxyGrid regions are dynamic keys in the server list, so they connect through the same
+   * code path as any Outline key.
+   */
+  attachProxyGrid(
+    account: ProxyGridAccount,
+    session: ProxyGridSession,
+    homeModeStorage: Storage = window.localStorage
+  ) {
+    this.proxyGrid = account;
+
+    const savedMode = homeModeStorage.getItem('home_mode');
+    // Existing users with their own servers and no ProxyGrid account land on their servers.
+    const hasOwnServers = this.serverRepo
+      .getAll()
+      .some(s => !this.isProxyGridServer(s.id));
+    this.rootEl.homeMode =
+      savedMode === 'own' || savedMode === 'proxygrid'
+        ? savedMode
+        : session.state.kind === 'signedIn' || !hasOwnServers
+          ? 'proxygrid'
+          : 'own';
+
+    account.onChange(state => {
+      this.rootEl.proxyGridAccount = state;
+      this.rootEl.proxyGridServerIds = Array.from(account.proxyGridServerIds());
+    });
+
+    const busy = async (fn: () => Promise<void>) => {
+      this.rootEl.proxyGridBusy = true;
+      try {
+        await fn();
+      } catch (e) {
+        console.error('ProxyGrid action failed', e);
+        account.reportError(e instanceof Error ? e.message : String(e));
+      } finally {
+        this.rootEl.proxyGridBusy = false;
+      }
+    };
+
+    this.rootEl.addEventListener('HomeModeChanged', (e: CustomEvent) => {
+      this.rootEl.homeMode = e.detail.mode;
+      homeModeStorage.setItem('home_mode', e.detail.mode);
+    });
+    this.rootEl.addEventListener('ProxyGridSignIn', (e: CustomEvent) =>
+      busy(async () => {
+        account.reportError(null);
+        await session.signIn(e.detail.email, e.detail.password);
+      })
+    );
+    this.rootEl.addEventListener('ProxyGridChallenge', (e: CustomEvent) =>
+      busy(async () => {
+        account.reportError(null);
+        await session.answerChallenge(e.detail.answer);
+      })
+    );
+    this.rootEl.addEventListener('ProxyGridCancelChallenge', () =>
+      session.cancelChallenge()
+    );
+    this.rootEl.addEventListener('ProxyGridSignOut', () =>
+      busy(async () => {
+        await account.signOut(async serverId => {
+          const server = this.serverRepo.getById(serverId);
+          if (server && (await server.checkRunning())) {
+            await server.disconnect();
+          }
+        });
+      })
+    );
+    this.rootEl.addEventListener('ProxyGridSelectRegion', (e: CustomEvent) =>
+      busy(async () => {
+        const previous = account.current.serverId;
+        const wasConnected =
+          !!previous &&
+          !!(await this.serverRepo.getById(previous)?.checkRunning());
+        account.selectRegion(e.detail.region);
+        if (wasConnected) {
+          // Switch regions in place; the platforms swap tunnels without a gap where possible.
+          await this.connectProxyGridRegion();
+        }
+      })
+    );
+    this.rootEl.addEventListener('ProxyGridConnect', () =>
+      busy(() => this.connectProxyGridRegion())
+    );
+    this.rootEl.addEventListener('ProxyGridDisconnect', () => {
+      const serverId = account.current.serverId;
+      if (serverId) {
+        void this.disconnectServer(
+          new CustomEvent('DisconnectPressed', {detail: {serverId}})
+        );
+      }
+    });
+
+    // Keep plan, usage and region health current while the app is in the foreground.
+    account.start();
+    window.document.addEventListener('resume', () => account.start());
+    window.document.addEventListener('pause', () => account.stop());
+  }
+
+  private async connectProxyGridRegion() {
+    if (!this.proxyGrid) return;
+    const serverId = await this.proxyGrid.ensureRegionServer();
+    this.syncServersToUI();
+    await this.connectServer(
+      new CustomEvent('ConnectPressed', {detail: {serverId}})
+    );
+  }
+
+  //#endregion ProxyGrid
 
   private syncConnectivityStateToServerCards() {
     for (const server of this.serverRepo.getAll()) {

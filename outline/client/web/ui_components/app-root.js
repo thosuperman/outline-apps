@@ -55,6 +55,8 @@ import '../views/root_view/error_details_dialog';
 // eslint-disable-next-line n/no-missing-import
 import '../views/servers_view';
 // eslint-disable-next-line n/no-missing-import
+import '../views/home_view';
+// eslint-disable-next-line n/no-missing-import
 import '../views/root_view/add_access_key_dialog';
 // eslint-disable-next-line n/no-missing-import
 import '../views/root_view/root_header';
@@ -326,15 +328,25 @@ export class AppRoot extends mixinBehaviors(
         ></root-header>
 
         <iron-pages id="pages" selected="[[page]]" attr-for-selected="name">
-          <servers-view
+          <home-view
             name="home"
-            id="serversView"
-            dark-mode="[[darkMode]]"
-            servers="[[servers]]"
+            id="homeView"
             localize="[[localize]]"
-            should-show-access-key-wiki-link="[[useAltAccessMessage]]"
-            on-add-server="promptAddServer"
-          ></servers-view>
+            servers="[[servers]]"
+            account="[[proxyGridAccount]]"
+            mode="[[homeMode]]"
+            busy="[[proxyGridBusy]]"
+          >
+            <servers-view
+              slot="own-servers"
+              id="serversView"
+              dark-mode="[[darkMode]]"
+              servers="[[_ownServers(servers, proxyGridServerIds)]]"
+              localize="[[localize]]"
+              should-show-access-key-wiki-link="[[useAltAccessMessage]]"
+              on-add-server="promptAddServer"
+            ></servers-view>
+          </home-view>
           <contact-view
             name="contact"
             id="contactView"
@@ -566,10 +578,28 @@ export class AppRoot extends mixinBehaviors(
       },
       shouldShowAddButton: {
         type: Boolean,
-        computed: '_computeShouldShowAddButton(page)',
+        computed: '_computeShouldShowAddButton(page, homeMode)',
       },
       servers: {
         type: Array,
+      },
+      // ProxyGrid account state for the home screen (see app/proxygrid/account.ts).
+      proxyGridAccount: {
+        type: Object,
+        value: null,
+      },
+      // Servers that hold ProxyGrid keys; hidden from the "My Own Server" list.
+      proxyGridServerIds: {
+        type: Array,
+        value: () => [],
+      },
+      proxyGridBusy: {
+        type: Boolean,
+        value: false,
+      },
+      homeMode: {
+        type: String,
+        value: 'proxygrid',
       },
       // Tells AppLocalizeBehavior to bubble its
       // app-localize-resources-loaded event, allowing us listen for it on
@@ -813,9 +843,14 @@ export class AppRoot extends mixinBehaviors(
     return page !== DEFAULT_PAGE;
   }
 
-  _computeShouldShowAddButton(page) {
-    // Only show the add button if we're on the home page.
-    return page === 'home';
+  _computeShouldShowAddButton(page, homeMode) {
+    // Only show the add button on the home page's own-server tab.
+    return page === 'home' && homeMode === 'own';
+  }
+
+  _ownServers(servers, proxyGridServerIds) {
+    const hidden = new Set(proxyGridServerIds || []);
+    return (servers || []).filter(s => !hidden.has(s.id));
   }
 
   _goBack() {

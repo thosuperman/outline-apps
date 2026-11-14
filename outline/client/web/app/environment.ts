@@ -16,6 +16,10 @@ export interface EnvironmentVariables {
   APP_VERSION: string;
   APP_BUILD_NUMBER: string;
   SENTRY_DSN: string | undefined;
+  PROXYGRID_API_URL?: string;
+  PROXYGRID_COGNITO_REGION?: string;
+  PROXYGRID_USER_POOL_ID?: string;
+  PROXYGRID_USER_POOL_CLIENT_ID?: string;
 }
 
 // According to http://caniuse.com/#feat=fetch fetch didn't land iOS Safari

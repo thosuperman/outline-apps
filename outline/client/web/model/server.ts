@@ -49,4 +49,6 @@ export interface ServerRepository {
   undoForget(serverId: string): void;
   getAll(): Server[];
   getById(serverId: string): Server | undefined;
+  // The access key a server was added with (ss://, ssconf:// or a config URL).
+  getAccessKey(serverId: string): string | undefined;
 }

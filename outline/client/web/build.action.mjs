@@ -29,7 +29,8 @@ import {runWebpack} from '../build/run_webpack.mjs';
  * @param {string[]} parameters
  */
 export async function main(...parameters) {
-  const {sentryDsn, platform, buildMode, versionName, buildNumber} = getBuildParameters(parameters);
+  const {sentryDsn, platform, buildMode, versionName, buildNumber} =
+    getBuildParameters(parameters);
 
   await rmfr(path.resolve(getRootDir(), 'www'));
 
@@ -38,25 +39,32 @@ export async function main(...parameters) {
 
   if (buildMode === 'release') {
     if (versionName === '0.0.0') {
-      throw new TypeError('Release builds require a valid versionName, but it is set to 0.0.0.');
+      throw new TypeError(
+        'Release builds require a valid versionName, but it is set to 0.0.0.'
+      );
     }
 
+    // Crash reporting is opt-in for GridVPN builds: without a DSN nothing is sent anywhere.
     if (!sentryDsn) {
-      throw new TypeError('Release builds require SENTRY_DSN, but it is not defined.');
-    }
-
-    /*
-      the SENTRY_DSN follows a stardard URL format:
-      https://docs.sentry.io/product/sentry-basics/dsn-explainer/#the-parts-of-the-dsn
-    */
-    try {
-      new URL(sentryDsn);
-    } catch (e) {
-      throw new TypeError(`The sentryDsn ${sentryDsn} is not a valid URL!`);
+      console.warn(
+        'SENTRY_DSN is not set: this release build has no crash reporting.'
+      );
+    } else {
+      /*
+        the SENTRY_DSN follows a stardard URL format:
+        https://docs.sentry.io/product/sentry-basics/dsn-explainer/#the-parts-of-the-dsn
+      */
+      try {
+        new URL(sentryDsn);
+      } catch (e) {
+        throw new TypeError(`The sentryDsn ${sentryDsn} is not a valid URL!`);
+      }
     }
   }
 
-  await fs.mkdir(path.resolve(getRootDir(), 'client', 'www'), {recursive: true});
+  await fs.mkdir(path.resolve(getRootDir(), 'client', 'www'), {
+    recursive: true,
+  });
 
   await fs.writeFile(
     path.resolve(getRootDir(), 'client', 'www', 'environment.json'),
@@ -64,6 +72,14 @@ export async function main(...parameters) {
       SENTRY_DSN: sentryDsn,
       APP_VERSION: versionName,
       APP_BUILD_NUMBER: buildNumber,
+      // ProxyGrid account integration. These are public identifiers (they also ship in the
+      // ProxyGrid website), passed at build time so no deployment-specific value is in Git.
+      PROXYGRID_API_URL:
+        process.env.PROXYGRID_API_URL || 'https://api.proxygrid.net',
+      PROXYGRID_COGNITO_REGION: process.env.PROXYGRID_COGNITO_REGION || '',
+      PROXYGRID_USER_POOL_ID: process.env.PROXYGRID_USER_POOL_ID || '',
+      PROXYGRID_USER_POOL_CLIENT_ID:
+        process.env.PROXYGRID_USER_POOL_CLIENT_ID || '',
     })
   );
 

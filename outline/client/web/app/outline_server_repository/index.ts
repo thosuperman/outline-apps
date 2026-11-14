@@ -139,6 +139,10 @@ class OutlineServerRepository implements ServerRepository {
     return this.serverById.get(serverId)?.server;
   }
 
+  getAccessKey(serverId: string) {
+    return this.serverById.get(serverId)?.accessKey;
+  }
+
   async add(accessKey: string): Promise<void> {
     const alreadyAddedServer = this.serverFromAccessKey(accessKey);
     if (alreadyAddedServer) {
