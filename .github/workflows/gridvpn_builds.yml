@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GridVPN client builds: tests, Windows installers and Android packages, uploaded as
-# GridVPN-named artifacts. Apple builds need the Phu Duc signing identity and run locally (see
+# ProxyGrid VPN client builds: tests, Windows installers and Android packages, uploaded as
+# ProxyGrid-VPN-named artifacts. Apple builds need the Phu Duc signing identity and run locally (see
 # docs/gridvpn/BUILD.md).
 #
 # Signing material only comes from repository secrets and is never written to the repo:
@@ -21,10 +21,10 @@
 #   (Windows Authenticode signing is configured in electron/windows/electron_builder_signing_plugin.cjs)
 # ProxyGrid sign-in identifiers come from repository variables (public values):
 #   PROXYGRID_COGNITO_REGION, PROXYGRID_USER_POOL_ID, PROXYGRID_USER_POOL_CLIENT_ID
-name: GridVPN / Builds
+name: ProxyGrid VPN / Builds
 
 concurrency:
-  group: '${{ github.ref }} GridVPN'
+  group: '${{ github.ref }} ProxyGrid VPN'
   cancel-in-progress: true
 
 on:
@@ -100,6 +100,26 @@ jobs:
           version: 0.13.0
           use-cache: false
       - run: npm ci
+      # The routing service and DNS-leak helper are rebuilt from source so their compiled-in
+      # names (service ProxyGridVPNService, pipe ProxyGridVPNServicePipe, adapter proxygrid-tap0)
+      # match the app and do not collide with an installed official Outline app.
+      - name: Build Windows helpers (routing service, smartdnsblock)
+        shell: pwsh
+        run: |
+          $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          & $msbuild client\electron\windows\OutlineService\OutlineService.sln /p:Configuration=Release /p:Platform=x86 /v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $msbuild client\electron\windows\smartdnsblock\smartdnsblock.sln /p:Configuration=Release /p:Platform=x86 /p:PlatformToolset=v143 /v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Item client\electron\windows\OutlineService\OutlineService\bin\OutlineService.exe, client\electron\windows\smartdnsblock\bin\smartdnsblock.exe | Format-Table Name, Length, LastWriteTime
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: matrix.arch == 'ia32'
+        with:
+          name: ProxyGrid-VPN-windows-helpers
+          path: |
+            outline/client/electron/windows/OutlineService/OutlineService/bin/OutlineService.exe
+            outline/client/electron/windows/smartdnsblock/bin/smartdnsblock.exe
+          if-no-files-found: error
       # The NSIS .exe installs the TAP driver and routing service. An MSI can be produced with
       # GRIDVPN_WINDOWS_MSI=1 but cannot connect yet (no TAP driver custom action).
       - name: Build installer (.exe)
@@ -114,7 +134,7 @@ jobs:
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: GridVPN-windows-${{ matrix.arch }}
+          name: ProxyGrid-VPN-windows-${{ matrix.arch }}
           path: outline/output/client/electron/build/*.exe
           if-no-files-found: error
 
@@ -147,11 +167,11 @@ jobs:
         run: |
           mkdir -p ../gridvpn-android
           find client/platforms/android -name '*.apk' -o -name '*.aab' -o -name '*.apks' | while read f; do
-            cp "$f" "../gridvpn-android/GridVPN-$(basename "$f")"
+            cp "$f" "../gridvpn-android/ProxyGrid-VPN-$(basename "$f")"
           done
           ls -la ../gridvpn-android
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: GridVPN-android
+          name: ProxyGrid-VPN-android
           path: gridvpn-android/*
           if-no-files-found: error

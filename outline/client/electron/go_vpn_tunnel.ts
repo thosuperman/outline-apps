@@ -26,9 +26,13 @@ import {TunnelStatus} from '../web/app/outline_server_repository/vpn';
 const IS_LINUX = platform() === 'linux';
 const IS_WINDOWS = platform() === 'win32';
 
-const TUN2SOCKS_TAP_DEVICE_NAME = IS_LINUX ? 'outline-tun0' : 'outline-tap0';
-const TUN2SOCKS_TAP_DEVICE_IP = '10.0.85.2';
-const TUN2SOCKS_VIRTUAL_ROUTER_IP = '10.0.85.1';
+// Distinct from the official Outline app's devices and subnet (outline-tap0, 10.0.85.x) so both
+// apps can be installed.
+const TUN2SOCKS_TAP_DEVICE_NAME = IS_LINUX
+  ? 'proxygrid-tun0'
+  : 'proxygrid-tap0';
+const TUN2SOCKS_TAP_DEVICE_IP = '10.0.86.2';
+const TUN2SOCKS_VIRTUAL_ROUTER_IP = '10.0.86.1';
 const TUN2SOCKS_VIRTUAL_ROUTER_NETMASK = '255.255.255.0';
 
 // The TAP device's DNS server. tun.OpenTunDevice pushes it to Windows over DHCP, overriding the
@@ -360,8 +364,8 @@ class GoTun2socks {
     // A previous stop() (suspend, network change) must not disable auto-restart for this run.
     this.stopRequested = false;
     // ./tun2socks.exe \
-    //   -tunName outline-tap0 -tunDNS 1.1.1.1,9.9.9.9 \
-    //   -tunAddr 10.0.85.2 -tunGw 10.0.85.1 -tunMask 255.255.255.0 \
+    //   -tunName proxygrid-tap0 -tunDNS 1.1.1.1,9.9.9.9 \
+    //   -tunAddr 10.0.86.2 -tunGw 10.0.86.1 -tunMask 255.255.255.0 \
     //   -client '{ "transport:" {"host": "127.0.0.1", "port": 1080, "password": "mypassword", "cipher": "chacha20-ietf-poly1035"} }' \
     //   [-dnsFallback] [-checkConnectivity] [-proxyPrefix]
 

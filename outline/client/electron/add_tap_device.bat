@@ -16,7 +16,7 @@
 :: See https://ss64.com/nt/delayedexpansion.html
 setlocal enabledelayedexpansion
 
-set DEVICE_NAME=outline-tap0
+set DEVICE_NAME=proxygrid-tap0
 set DEVICE_HWID=tap0901
 
 :: Error codes for surfacing to the user and sentry.
@@ -96,13 +96,13 @@ echo (Re-)enabling TAP network device...
 powershell "Enable-NetAdapter -Name \"%DEVICE_NAME%\"" <nul
 
 :: Give the device an IP address.
-:: 10.0.85.x is a guess which we hope will work for most users (Docker for
+:: 10.0.86.x (Outline uses 10.0.85.x, so both apps can be installed) is a guess which we hope will work for most users (Docker for
 :: Windows uses 10.0.75.x by default): if the address is already in use the
 :: script will fail and the installer will show an error message to the user.
 :: TODO: Actually search the system for an unused subnet or make the subnet
 ::       configurable in the Outline client.
 echo Configuring TAP device subnet...
-%SystemRoot%\System32\netsh interface ip set address %DEVICE_NAME% static 10.0.85.2 255.255.255.255
+%SystemRoot%\System32\netsh interface ip set address %DEVICE_NAME% static 10.0.86.2 255.255.255.255
 if %errorlevel% neq 0 (
   echo Could not set TAP network device subnet. >&2
   exit /b %ERROR_TAP_CONFIGURE_SUBNET%

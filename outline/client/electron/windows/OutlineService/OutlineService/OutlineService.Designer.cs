@@ -45,7 +45,7 @@ namespace OutlineService
             //
             // OutlineService
             //
-            this.ServiceName = "OutlineService";
+            this.ServiceName = "ProxyGridVPNService";
 
         }
 

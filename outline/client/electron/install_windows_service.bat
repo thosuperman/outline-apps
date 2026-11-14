@@ -12,7 +12,7 @@
 :: See the License for the specific language governing permissions and
 :: limitations under the License.
 
-:: Stops/uninstalls and starts/reinstalls OutlineService.
+:: Stops/uninstalls and starts/reinstalls ProxyGridVPNService (OutlineService.exe).
 :: Intended to be called by both the installer and client.
 ::
 :: Does *not* fail if any step fails: the caller must check
@@ -24,13 +24,13 @@ setlocal EnableDelayedExpansion
 set PWD=%~dp0%
 
 :: Stop and delete the service.
-%SystemRoot%\System32\net stop OutlineService
-%SystemRoot%\System32\sc delete OutlineService
+%SystemRoot%\System32\net stop ProxyGridVPNService
+%SystemRoot%\System32\sc delete ProxyGridVPNService
 
 :: Install and start the service, configuring it to restart on boot.
 :: NOTE: spaces after the arguments are necessary for a correct installation, do not remove!
-%SystemRoot%\System32\sc create OutlineService binpath= "\"%PWD%OutlineService.exe\"" displayname= "OutlineService" start= "auto"
-%SystemRoot%\System32\net start OutlineService
+%SystemRoot%\System32\sc create ProxyGridVPNService binpath= "\"%PWD%OutlineService.exe\"" displayname= "ProxyGrid VPN Service" start= "auto"
+%SystemRoot%\System32\net start ProxyGridVPNService
 
 :: This is for the client: sudo-prompt discards stdout/stderr if the script
 :: exits with a non-zero return code *which will happen if any of the previous

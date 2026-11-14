@@ -56,18 +56,18 @@ using Newtonsoft.Json;
  *  { statusCode:<int>, action:"statusChanged", connectionStatus:<int>, gatewayAdapterIndex?:<string> }
  *
  * View logs with this PowerShell query:
- * get-eventlog -logname Application -source OutlineService -newest 20 | format-table -property timegenerated,entrytype,message -autosize
+ * get-eventlog -logname Application -source ProxyGridVPNService -newest 20 | format-table -property timegenerated,entrytype,message -autosize
  */
 namespace OutlineService
 {
     public partial class OutlineService : ServiceBase
     {
-        private const string EVENT_LOG_SOURCE = "OutlineService";
+        private const string EVENT_LOG_SOURCE = "ProxyGridVPNService";
         private const string EVENT_LOG_NAME = "Application";
         // Must be kept in sync with the Electron code.
-        private const string PIPE_NAME = "OutlineServicePipe";
-        private const string TAP_DEVICE_NAME = "outline-tap0";
-        private const string TAP_DEVICE_IP = "10.0.85.1";
+        private const string PIPE_NAME = "ProxyGridVPNServicePipe";
+        private const string TAP_DEVICE_NAME = "proxygrid-tap0";
+        private const string TAP_DEVICE_IP = "10.0.86.1";
 
         private const string ACTION_CONFIGURE_ROUTING = "configureRouting";
         private const string ACTION_RESET_ROUTING = "resetRouting";
@@ -169,7 +169,7 @@ namespace OutlineService
 
         protected override void OnStart(string[] args)
         {
-            eventLog.WriteEntry("OutlineService starting");
+            eventLog.WriteEntry("ProxyGridVPNService starting");
             NetworkChange.NetworkAddressChanged +=
                 new NetworkAddressChangedEventHandler(NetworkAddressChanged);
             CreatePipe();
@@ -177,7 +177,7 @@ namespace OutlineService
 
         protected override void OnStop()
         {
-            eventLog.WriteEntry("OutlineService stopping");
+            eventLog.WriteEntry("ProxyGridVPNService stopping");
             DestroyPipe();
             NetworkChange.NetworkAddressChanged -= NetworkAddressChanged;
         }

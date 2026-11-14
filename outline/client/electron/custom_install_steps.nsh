@@ -59,7 +59,7 @@ ${StrRep}
   File "${PROJECT_DIR}\client\electron\find_tap_device_name.bat"
 
   ; OutlineService files, stopping the service first in case it's still running.
-  nsExec::Exec "$SYSDIR\net stop OutlineService"
+  nsExec::Exec "$SYSDIR\net stop ProxyGridVPNService"
   File "${PROJECT_DIR}\client\electron\windows\OutlineService\OutlineService\bin\OutlineService.exe"
   File "${PROJECT_DIR}\client\electron\windows\smartdnsblock\bin\smartdnsblock.exe"
   File "${PROJECT_DIR}\third_party\newtonsoft\Newtonsoft.Json.dll"
@@ -150,14 +150,14 @@ ${StrRep}
 
   nsExec::Exec install_windows_service.bat
 
-  nsExec::Exec "$SYSDIR\sc query OutlineService"
+  nsExec::Exec "$SYSDIR\sc query ProxyGridVPNService"
   Pop $0
   StrCmp $0 0 success
   ; TODO: Trigger a Sentry report for service installation failure, too, and revisit
   ;       the restart stuff in the TypeScript code.
   MessageBox MB_OK "Sorry, we could not configure your system to connect to Outline. Please try \
     running the installer again. If you still cannot install Outline, please get in touch with us \
-    and let us know that OutlineService failed to install."
+    and let us know that ProxyGridVPNService failed to install."
   Quit
 
   success:
@@ -168,6 +168,6 @@ ${StrRep}
 ;       with the bundled devcon.exe because it can only remove *all* devices
 ;       having hwid tap0901 and these may include non-Outline devices.
 !macro customUnInstall
-  nsExec::Exec "$SYSDIR\net stop OutlineService"
-  nsExec::Exec "$SYSDIR\sc delete OutlineService"
+  nsExec::Exec "$SYSDIR\net stop ProxyGridVPNService"
+  nsExec::Exec "$SYSDIR\sc delete ProxyGridVPNService"
 !macroend

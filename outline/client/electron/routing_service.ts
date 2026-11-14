@@ -24,7 +24,7 @@ import {ErrorCode} from '../web/model/errors';
 import {PlatformError, GoErrorCode} from '../web/model/platform_error';
 
 const isWindows = platform() === 'win32';
-const SERVICE_NAME = '\\\\.\\pipe\\OutlineServicePipe';
+const SERVICE_NAME = '\\\\.\\pipe\\ProxyGridVPNServicePipe';
 
 interface RoutingServiceRequest {
   action: string;
@@ -62,7 +62,7 @@ enum RoutingServiceStatusCode {
 // important since only one client may be connected to the Windows service at any given time.
 //
 // To test:
-//  - Windows: net start|stop OutlineService
+//  - Windows: net start|stop ProxyGridVPNService
 export class RoutingDaemon {
   private socket: Socket | null | undefined;
 
@@ -271,7 +271,7 @@ export class RoutingDaemon {
  */
 function executeCommandAsRoot(command: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    sudo.exec(command, {name: 'GridVPN'}, (sudoError, stdout, stderr) => {
+    sudo.exec(command, {name: 'ProxyGrid VPN'}, (sudoError, stdout, stderr) => {
       console.info(stdout);
       console.error(stderr);
 

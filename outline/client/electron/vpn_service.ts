@@ -40,28 +40,28 @@ export async function establishVpn(tsRequest: StartRequestJson) {
     vpn: {
       id: tsRequest.id,
 
-      // TUN device name, use 'outline-tun1' to avoid conflict with old 'outline-tun0'
-      // left behind on machines that previously ran the AppImage build:
+      // TUN device name. Distinct from the official Outline app ('outline-tun1', and the old
+      // 'outline-tun0' left behind by its AppImage build) so both apps can be installed:
       // https://github.com/OutlineFoundation/outline-apps/blob/client/linux/v1.14.0/client/electron/linux_proxy_controller/outline_proxy_controller.h#L203
-      interfaceName: 'outline-tun1',
+      interfaceName: 'proxygrid-tun1',
 
       // Network Manager connection name, Use "TUN Connection" instead of "VPN Connection"
       // because Network Manager has a dedicated "VPN Connection" concept that we did not implement
-      connectionName: 'GridVPN TUN Connection',
+      connectionName: 'ProxyGrid VPN TUN Connection',
 
-      // TUN IP, use '10.0.85.5' to avoid conflict with old '10.0.85.1'
-      // left behind on machines that previously ran the AppImage build:
+      // TUN IP. Outline uses 10.0.85.x ('10.0.85.5', and the old AppImage's '10.0.85.1'):
       // https://github.com/OutlineFoundation/outline-apps/blob/client/linux/v1.14.0/client/electron/linux_proxy_controller/outline_proxy_controller.h#L204
-      ipAddress: '10.0.85.5',
+      ipAddress: '10.0.86.5',
 
       // A "fake" local DNS resolver. Outline will intercept the real resolver at this address.
       // Must align with: client/go/outline/configregistry/outline_dns_intercept.go
       dnsLinkLocalAddress: '169.254.113.53',
 
-      // Outline magic numbers, 7113 and 0x711E visually resembles "T L I E" in "ouTLInE"
-      routingTableId: 7113,
-      routingPriority: 0x711e,
-      protectionMark: 0x711e,
+      // Distinct from the official Outline app's routing table (7113) and mark (0x711E), so the
+      // two apps' policy routes cannot clash. 0x7C6D: "PG" + "VPN"-ish, outside Outline's range.
+      routingTableId: 7124,
+      routingPriority: 0x7c6d,
+      protectionMark: 0x7c6d,
     },
 
     // The actual client config
