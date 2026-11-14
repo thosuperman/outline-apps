@@ -1,8 +1,8 @@
-# GridVPN release notes
+# ProxyGrid VPN release notes
 
 ## 1.0.0 (preview, 2026-11-14)
 
-GridVPN is the VPN app of ProxyGrid. *Your Network. Your Freedom.*
+ProxyGrid VPN is the VPN app of ProxyGrid. *Your Network. Your Freedom.*
 
 ### New
 
@@ -40,6 +40,6 @@ GridVPN is the VPN app of ProxyGrid. *Your Network. Your Freedom.*
 
 ### Credits
 
-GridVPN is built on the open-source [Outline client](https://github.com/OutlineFoundation/outline-apps)
+ProxyGrid VPN is built on the open-source [Outline client](https://github.com/OutlineFoundation/outline-apps)
 by the Outline Foundation and uses Shadowsocks. It is not affiliated with or endorsed by the
 Outline Foundation. Open-source licenses are listed in the app under Licenses.

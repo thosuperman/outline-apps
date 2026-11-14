@@ -1,4 +1,4 @@
-# GridVPN test results (2026-11-14)
+# ProxyGrid VPN test results (2026-11-14)
 
 Branch `feat/gridvpn-client`. "Automated" means it runs in `npm run action client/web/test`,
 `go test ./client/go/...`, the Apple `VpnExtensionTest` suite, or CI
@@ -29,7 +29,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `GridVPN-dev-macos-universal.dmg`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider` |
+| Build: signed universal app with Network Extension, team 797NU6L392 | **Built**: `ProxyGrid-VPN-dev-macos-universal.dmg`, `codesign --verify --deep --strict` OK, extension entitled `packet-tunnel-provider` |
 | `VpnExtensionTest` (tunnel settings incl. new IPv6 and DNS routes, error persistence, address selection) | Pass |
 | Connect/disconnect, DNS, sleep/wake, Wi-Fi switch on a real Mac | Not yet tested (needs the owner to add a key and approve live tests) |
 
@@ -37,7 +37,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `GridVPN-dev-ios.ipa` |
+| Build: signed `.ipa` with the VPN extension (development, 3 registered devices) | **Built**: `ProxyGrid-VPN-dev-ios.ipa` |
 | On-device connect, background/foreground, network switching | Not yet tested |
 
 ## Android
@@ -57,14 +57,14 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 ## CI
 
-"GridVPN / Builds" on thosuperman/outline-apps, run 43578073499 (commit c2e35434): all jobs pass.
+"ProxyGrid VPN / Builds" on thosuperman/outline-apps, run 43578073499 (commit c2e35434): all jobs pass.
 
 | Job | Result | Artifact |
 |---|---|---|
 | Web and Go tests (Ubuntu) | Pass: 105/105 web specs, all Go packages with `-race` | — |
-| Windows ia32 | Built | `GridVPN-windows-ia32` → `GridVPN-0.0.0-debug-ia32.exe` (unsigned) |
-| Windows arm64 | Built | `GridVPN-windows-arm64` → `GridVPN-0.0.0-debug-arm64.exe` (unsigned) |
-| Android | Built | `GridVPN-android` → `GridVPN-app-debug.apk` (debug-signed) |
+| Windows ia32 | Built | `ProxyGrid-VPN-windows-ia32` → `ProxyGrid-VPN-0.0.0-debug-ia32.exe` (unsigned) |
+| Windows arm64 | Built | `ProxyGrid-VPN-windows-arm64` → `ProxyGrid-VPN-0.0.0-debug-arm64.exe` (unsigned) |
+| Android | Built | `ProxyGrid-VPN-android` → `ProxyGrid-VPN-app-debug.apk` (debug-signed) |
 
 Earlier runs caught two real test problems (an unhandled rejection in a web spec and the e2e
 cleanup check counting test-server goroutines) and one build bug (the Android label patch
