@@ -31,8 +31,11 @@ const TUN2SOCKS_TAP_DEVICE_IP = '10.0.85.2';
 const TUN2SOCKS_VIRTUAL_ROUTER_IP = '10.0.85.1';
 const TUN2SOCKS_VIRTUAL_ROUTER_NETMASK = '255.255.255.0';
 
-// Cloudflare and Quad9 resolvers.
-const DNS_RESOLVERS = ['1.1.1.1', '9.9.9.9'];
+// The TAP device's DNS server. tun.OpenTunDevice pushes it to Windows over DHCP, overriding the
+// static address set by add_tap_device.bat, so it must be the link-local address that the Go DNS
+// interceptor answers (configregistry.linkLocalDNS). Pointing it at a public resolver instead
+// sends DNS as raw UDP through the proxy, with no TCP fallback when UDP is blocked.
+const DNS_RESOLVERS = ['169.254.113.53'];
 
 // Establishes a full-system VPN with the help of Outline's routing daemon and child process
 // outline-go-tun2socks. The routing service modifies the routing table so that the TAP device
@@ -61,6 +64,21 @@ export class GoVpnTunnel implements VpnTunnel {
   private reconnectingListener?: () => void;
 
   private reconnectedListener?: () => void;
+
+  // Stable references, so removeListener() actually removes what on() added.
+  private readonly onSuspend = () => {
+    this.suspendListener().catch(e =>
+      console.error('suspend handling failed:', e)
+    );
+  };
+  private readonly onResume = () => {
+    this.resumeListener().catch(e =>
+      console.error('resume handling failed:', e)
+    );
+  };
+
+  // Restarts of tun2socks run one at a time.
+  private restartChain: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly routing: RoutingDaemon,
@@ -93,8 +111,8 @@ export class GoVpnTunnel implements VpnTunnel {
     if (IS_WINDOWS) {
       // Windows: when the system suspends, tun2socks terminates due to the TAP device getting
       // closed.
-      powerMonitor.on('suspend', this.suspendListener.bind(this));
-      powerMonitor.on('resume', this.resumeListener.bind(this));
+      powerMonitor.on('suspend', this.onSuspend);
+      powerMonitor.on('resume', this.onResume);
     }
 
     // Disconnect the tunnel if the routing service disconnects unexpectedly.
@@ -121,10 +139,27 @@ export class GoVpnTunnel implements VpnTunnel {
       }
     }
     console.log(`UDP support: ${this.isUdpEnabled}`);
+    this.throwIfDisconnected();
 
     console.log('starting routing daemon');
     this.gatewayAdapterIndex = await this.routing.start();
+    if (this.disconnected) {
+      // disconnect() ran while the routes were being set up; undo them.
+      await this.routing.stop().catch(() => {});
+      this.throwIfDisconnected();
+    }
     await this.startTun2socks();
+    if (this.disconnected) {
+      await this.tun2socks.stop().catch(() => {});
+      await this.routing.stop().catch(() => {});
+      this.throwIfDisconnected();
+    }
+  }
+
+  private throwIfDisconnected() {
+    if (this.disconnected) {
+      throw new Error('connection attempt cancelled by disconnect');
+    }
   }
 
   networkChanged(status: TunnelStatus, gatewayIndex?: string) {
@@ -141,7 +176,7 @@ export class GoVpnTunnel implements VpnTunnel {
 
       // Test whether UDP availability has changed; since it won't change 99% of the time, do this
       // *after* we've informed the client we've reconnected.
-      void this.updateUdpAndRestartTun2socks();
+      void this.restartTun2socks();
     } else if (status === TunnelStatus.RECONNECTING) {
       if (this.reconnectingListener) {
         this.reconnectingListener();
@@ -154,6 +189,9 @@ export class GoVpnTunnel implements VpnTunnel {
   }
 
   private async suspendListener() {
+    if (this.disconnected) {
+      return;
+    }
     // Preemptively stop tun2socks to avoid a silent restart that will fail.
     await this.tun2socks.stop();
     console.log('stopped tun2socks in preparation for suspend');
@@ -161,7 +199,6 @@ export class GoVpnTunnel implements VpnTunnel {
 
   private async resumeListener() {
     if (this.disconnected) {
-      // NOTE: Cannot remove resume listeners - Electron bug?
       console.error(
         'resume event invoked but this tunnel is terminated - doing nothing'
       );
@@ -169,7 +206,15 @@ export class GoVpnTunnel implements VpnTunnel {
     }
 
     console.log('restarting tun2socks after resume');
-    await this.updateUdpAndRestartTun2socks();
+    await this.restartTun2socks();
+  }
+
+  // Queues a restart behind any restart in progress. Never rejects.
+  private restartTun2socks(): Promise<void> {
+    this.restartChain = this.restartChain
+      .then(() => this.updateUdpAndRestartTun2socks())
+      .catch(e => console.error('failed to restart tun2socks:', e));
+    return this.restartChain;
   }
 
   private startTun2socks(): Promise<void> {
@@ -203,11 +248,18 @@ export class GoVpnTunnel implements VpnTunnel {
       console.error('connectivity check failed:', e);
     }
 
+    if (this.disconnected) {
+      return;
+    }
     // Restart tun2socks.
     try {
       await this.tun2socks.stop();
     } catch {
       // Ignore the errors
+    }
+    // The user may have disconnected during the checks above.
+    if (this.disconnected) {
+      return;
     }
     await this.startTun2socks();
   }
@@ -217,10 +269,12 @@ export class GoVpnTunnel implements VpnTunnel {
     if (this.disconnected) {
       return;
     }
+    // Set first, so a connect() or restart in progress sees it at its next step and backs out.
+    this.disconnected = true;
 
     if (IS_WINDOWS) {
-      powerMonitor.removeListener('suspend', this.suspendListener.bind(this));
-      powerMonitor.removeListener('resume', this.resumeListener.bind(this));
+      powerMonitor.removeListener('suspend', this.onSuspend);
+      powerMonitor.removeListener('resume', this.onResume);
     }
 
     try {
@@ -239,7 +293,6 @@ export class GoVpnTunnel implements VpnTunnel {
       console.error(`could not stop routing: ${e.message}`);
     }
     this.resolveAllHelpersStopped();
-    this.disconnected = true;
   }
 
   // Fulfills once all helper processes have stopped.
@@ -304,6 +357,8 @@ class GoTun2socks {
     isUdpEnabled: boolean,
     args: string[]
   ): Promise<void> {
+    // A previous stop() (suspend, network change) must not disable auto-restart for this run.
+    this.stopRequested = false;
     // ./tun2socks.exe \
     //   -tunName outline-tap0 -tunDNS 1.1.1.1,9.9.9.9 \
     //   -tunAddr 10.0.85.2 -tunGw 10.0.85.1 -tunMask 255.255.255.0 \

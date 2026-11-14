@@ -95,6 +95,19 @@ const enum Options {
 
 let currentTunnel: VpnTunnel | undefined;
 
+// Bumped by every stop, so a start that is still resolving the server address can tell that the
+// user disconnected in the meantime and back out instead of connecting an untracked tunnel.
+let vpnGeneration = 0;
+
+// StartProxying requests run one at a time, so two of them cannot both pass the
+// "already connected" check and leave one tunnel orphaned.
+let startChain: Promise<unknown> = Promise.resolve();
+function serializeStart<T>(fn: () => Promise<T>): Promise<T> {
+  const run = startChain.then(fn, fn);
+  startChain = run.catch(() => {});
+  return run;
+}
+
 /**
  * Sentry must be initialized before electron app is ready:
  *   - https://github.com/getsentry/sentry-electron/blob/3.0.7/src/main/ipc.ts#L70
@@ -384,7 +397,15 @@ async function startVpn(request: StartRequestJson, isAutoConnect: boolean) {
     throw new Error('already connected');
   }
 
-  currentTunnel = await createVpnTunnel(request, isAutoConnect);
+  const generation = vpnGeneration;
+  const tunnel = await createVpnTunnel(request, isAutoConnect);
+  if (generation !== vpnGeneration) {
+    throw new Error('connection attempt cancelled by disconnect');
+  }
+  if (currentTunnel) {
+    throw new Error('already connected');
+  }
+  currentTunnel = tunnel;
   if (debugMode) {
     currentTunnel.enableDebugMode();
   }
@@ -418,6 +439,7 @@ async function startVpn(request: StartRequestJson, isAutoConnect: boolean) {
 
 // Invoked by both the stop-proxying event and quit handler.
 async function stopVpn() {
+  vpnGeneration++;
   if (IS_LINUX) {
     await Promise.all([closeVpn(), tearDownAutoLaunch()]);
     return;
@@ -492,7 +514,7 @@ function main() {
       );
       setUiTunnelStatus(TunnelStatus.RECONNECTING, requestAtShutdown.id);
       try {
-        await startVpn(requestAtShutdown, true);
+        await serializeStart(() => startVpn(requestAtShutdown, true));
         console.log(`reconnected to ${requestAtShutdown.id}`);
       } catch (e) {
         console.error(`could not reconnect: ${e.name} (${e.message})`);
@@ -548,33 +570,36 @@ function main() {
           //
           // TODO: refactor channel name and namespace to a constant
           const request = JSON.parse(params) as StartRequestJson;
-          // TODO: Rather than first disconnecting, implement a more efficient switchover (as well as
-          //       being faster, this would help prevent traffic leaks - the Cordova clients already do
-          //       this).
-          if (currentTunnel) {
-            console.log('disconnecting from current server...');
-            const onceDisconnected = currentTunnel.onceDisconnected;
-            void currentTunnel.disconnect();
-            await onceDisconnected;
-          }
+          return await serializeStart(async () => {
+            // TODO: Rather than first disconnecting, implement a more efficient switchover (as well as
+            //       being faster, this would help prevent traffic leaks - the Cordova clients already do
+            //       this).
+            if (currentTunnel) {
+              console.log('disconnecting from current server...');
+              const onceDisconnected = currentTunnel.onceDisconnected;
+              void currentTunnel.disconnect();
+              await onceDisconnected;
+            }
 
-          console.log(`connecting to ${request.name} (${request.id})...`);
+            console.log(`connecting to ${request.name} (${request.id})...`);
 
-          try {
-            await startVpn(request, false);
-            console.log(`connected to ${request.name} (${request.id})`);
-            await setupAutoLaunch(request);
-            // Auto-connect requires IPs; the hostname in here has already been resolved (see above).
-            tunnelStore.save(request).catch(() => {
-              console.error('Failed to store tunnel.');
-            });
-          } catch (e) {
-            console.error('could not connect:', e);
-            // clean up the state, no need to await because stopVpn might throw another error which can be ignored
-            void stopVpn();
-            throw e;
-          }
-          break;
+            try {
+              await startVpn(request, false);
+              console.log(`connected to ${request.name} (${request.id})`);
+              await setupAutoLaunch(request);
+              // Auto-connect requires IPs; the hostname in here has already been resolved (see above).
+              tunnelStore.save(request).catch(() => {
+                console.error('Failed to store tunnel.');
+              });
+            } catch (e) {
+              console.error('could not connect:', e);
+              // Clean up the state. Starts are serialized, so currentTunnel is this attempt's.
+              // No need to await: stopVpn might throw another error, which can be ignored.
+              void stopVpn();
+              throw e;
+            }
+            return '';
+          });
         }
 
         case 'StopProxying':
