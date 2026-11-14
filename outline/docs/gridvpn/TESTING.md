@@ -20,7 +20,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 | Network interruption / reconnection | Server goes down, traffic fails, server returns on the same address, client recovers without being recreated (`TestE2E_ReconnectsAfterServerRestart`) | Pass |
 | Resource cleanup | 5 session start/stop cycles return to the goroutine baseline (`TestE2E_SessionCleanupReleasesGoroutines`) | Pass (after making the test server expire idle associations) |
 | Packet relay | Drops rejected packets and continues, survives transient read errors, stops on close, gives up on persistent errors (`vpn/relay_test.go`) | Pass |
-| All Go packages | `go test -race ./client/go/...` | Pass locally (macOS); CI: see below |
+| All Go packages | `go test -race ./client/go/...` | Pass locally (macOS) and in CI (Linux) |
 | Web UI | 105 Jasmine specs in headless Chromium, incl. 40 new: Cognito SRP proof checked against a server-side SRP implementation, Cognito flows, ProxyGrid API shapes and errors, session refresh (single-flight, revoked vs offline), account provisioning (reuse key, over quota, 401 retry, sign-out keeps own servers), keychain storage migration and write-through | Pass (local and CI) |
 | Quota handling | Over-quota status blocks provisioning with an explanation; UI disables connect and links to upgrade; the backend's dynamic key also returns the "data limit reached" message | Pass (unit + visual check in browser) |
 | Concurrency | Concurrent token refresh shares one request; identical DNS queries share one exchange; Electron starts serialized (code review) | Pass (unit) |
@@ -44,7 +44,7 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build (CI) | See CI section |
+| Build (CI) | Built: debug `.apk` (release `.aab` needs the keystore secrets) |
 | Lifecycle fixes (teardown lock, stored status, callback re-registration, tile start) | Code review against the audit; no device test |
 | On-device connect, Doze, reboot restore, Quick Settings tile | Not yet tested (no Android device or emulator run in this round) |
 
@@ -52,13 +52,23 @@ that changes the machine's routing and needs a key entered by the owner (see "No
 
 | Area | Result |
 |---|---|
-| Build (CI, NSIS `.exe`, ia32 and arm64) | See CI section |
+| Build (CI, NSIS `.exe`, ia32 and arm64) | Built, unsigned (no Authenticode certificate configured) |
 | Relay-exit restart, DNS via link-local resolver, connect/disconnect races, sleep/resume | Code review; `go vet` on the host; no Windows machine test |
 
 ## CI
 
-Run on the fork for `feat/gridvpn-client`: see the "GridVPN / Builds" workflow. Results are
-recorded in the final report.
+"GridVPN / Builds" on thosuperman/outline-apps, run 43578073499 (commit c2e35434): all jobs pass.
+
+| Job | Result | Artifact |
+|---|---|---|
+| Web and Go tests (Ubuntu) | Pass: 105/105 web specs, all Go packages with `-race` | — |
+| Windows ia32 | Built | `GridVPN-windows-ia32` → `GridVPN-0.0.0-debug-ia32.exe` (unsigned) |
+| Windows arm64 | Built | `GridVPN-windows-arm64` → `GridVPN-0.0.0-debug-arm64.exe` (unsigned) |
+| Android | Built | `GridVPN-android` → `GridVPN-app-debug.apk` (debug-signed) |
+
+Earlier runs caught two real test problems (an unhandled rejection in a web spec and the e2e
+cleanup check counting test-server goroutines) and one build bug (the Android label patch
+targeted `strings.xml` instead of `cdv_strings.xml`); all three are fixed.
 
 ## Not yet tested (needs the owner)
 
