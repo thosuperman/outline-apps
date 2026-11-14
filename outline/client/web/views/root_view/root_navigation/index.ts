@@ -16,6 +16,7 @@ import {LitElement, html, css, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
+import {BRAND} from '../../../app/brand';
 import navigationLogo from '../../../assets/logo-nav.png';
 
 @customElement('root-navigation')
@@ -207,7 +208,7 @@ export class RootNavigation extends LitElement {
         })}
       >
         <header>
-          <img src="${navigationLogo}" alt="Outline navigation logo" />
+          <img src="${navigationLogo}" alt="${BRAND.productName}" />
         </header>
         <md-list>
           <!-- 
@@ -222,10 +223,14 @@ export class RootNavigation extends LitElement {
             <md-icon slot="start">home</md-icon>
             ${this.localize('servers-menu-item')}
           </md-list-item>
-          <md-list-item @click=${() => this.changePage('contact')}>
+          <md-list-item>
             <md-ripple></md-ripple>
             <md-icon slot="start">feedback</md-icon>
-            ${this.localize('contact-page-title')}
+            <!-- Feedback goes to ProxyGrid support, not to the Outline team. -->
+            <a href="mailto:${BRAND.supportEmail}">
+              <span>${this.localize('contact-page-title')}</span>
+              <md-icon id="open-in-new-icon">open_in_new</md-icon>
+            </a>
           </md-list-item>
           <md-list-item @click=${() => this.changePage('about')}>
             <md-ripple></md-ripple>
@@ -235,7 +240,7 @@ export class RootNavigation extends LitElement {
           <md-list-item>
             <md-ripple></md-ripple>
             <md-icon slot="start">help</md-icon>
-            <a href="https://support.getoutline.org">
+            <a href="${BRAND.websiteUrl}">
               <span>${this.localize('help-page-title')}</span>
               <md-icon id="open-in-new-icon">open_in_new</md-icon>
             </a>
@@ -264,7 +269,7 @@ export class RootNavigation extends LitElement {
         </md-list>
         <ul>
           <li>
-            <a href="https://getoutline.org/policies/privacy">
+            <a href="${BRAND.privacyUrl}">
               ${this.localize('privacy')}
               <md-icon id="open-in-new-icon">open_in_new</md-icon>
             </a>
@@ -276,7 +281,7 @@ export class RootNavigation extends LitElement {
             </a>
           </li>
           <li>
-            <a href="https://getoutline.org/policies/terms-of-service">
+            <a href="${BRAND.termsUrl}">
               ${this.localize('terms')}
               <md-icon id="open-in-new-icon">open_in_new</md-icon>
             </a>

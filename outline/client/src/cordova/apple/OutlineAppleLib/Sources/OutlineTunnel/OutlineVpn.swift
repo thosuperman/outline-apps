@@ -58,7 +58,7 @@ public class OutlineVpn: NSObject {
 
     let manager: NETunnelProviderManager
     do {
-      manager = try await setupVpn(withId: tunnelId, named: name ?? "Outline Server", withTransport: transportConfig)
+      manager = try await setupVpn(withId: tunnelId, named: name ?? "GridVPN", withTransport: transportConfig)
     } catch {
       DDLogError("Failed to setup VPN: \(error.localizedDescription)")
       throw OutlineError.vpnPermissionNotGranted(cause: error)
@@ -160,8 +160,8 @@ public class OutlineVpn: NSObject {
 
     // Configure the protocol.
     let config = NETunnelProviderProtocol()
-    // TODO(fortuna): set to something meaningful if we can.
-    config.serverAddress = "Outline"
+    // Shown as the "server" in the system VPN settings.
+    config.serverAddress = "GridVPN"
     config.providerBundleIdentifier = OutlineVpn.kVpnExtensionBundleId
     config.providerConfiguration = [
       ConfigKey.tunnelId: id,

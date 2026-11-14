@@ -1,6 +1,6 @@
 {
-  "productName": "Outline",
-  "artifactName": "Outline-Client-${arch}.${ext}",
+  "productName": "GridVPN",
+  "artifactName": "GridVPN-${version}-${arch}.${ext}",
   "directories": {
     "buildResources": "output/client/electron",
     "output": "output/client/electron/build"
@@ -27,9 +27,9 @@
   },
   "linux": {
     "category": "Network",
-    "executableName": "Outline",
+    "executableName": "GridVPN",
     "icon": "client/electron/icons/png",
-    "maintainer": "Outline Foundation"
+    "maintainer": "ProxyGrid <contact@proxygrid.net>"
   },
   "nsis": {
     "include": "client/electron/custom_install_steps.nsh",

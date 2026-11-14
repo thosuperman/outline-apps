@@ -391,7 +391,7 @@ export class AppRoot extends mixinBehaviors(
         localize="[[localize]]"
         id="drawer"
         show-quit="[[shouldShowQuitButton]]"
-        data-collection-page-url="https://getoutline.org/policies/data-collection"
+        data-collection-page-url="https://proxygrid.net/privacy"
         show-appearance-view="[[showAppearanceView]]"
       ></root-navigation>
 
@@ -408,7 +408,7 @@ export class AppRoot extends mixinBehaviors(
       <privacy-acknowledgement-dialog
         id="privacyView"
         localize="[[localize]]"
-        privacy-page-url="https://getoutline.org/policies/data-collection"
+        privacy-page-url="https://proxygrid.net/privacy"
       ></privacy-acknowledgement-dialog>
 
       <auto-connect-dialog

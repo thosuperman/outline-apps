@@ -14,6 +14,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import {BRAND} from '../../app/brand';
 import outlineDarkLogo from '../../assets/brand-logo-dark.png';
 import outlineLogo from '../../assets/brand-logo.png';
 
@@ -94,7 +95,7 @@ export class AboutView extends LitElement {
         <header>
           <img
             src="${this.darkMode ? outlineDarkLogo : outlineLogo}"
-            alt="outline logo"
+            alt="${BRAND.productName}"
           />
           <h2>
             ${this.localize('version', 'appVersion', this.version)}
@@ -103,19 +104,39 @@ export class AboutView extends LitElement {
         </header>
         <section
           id="about-outline-content"
-          .innerHTML=${this.localize(
-            'about-outline',
-            'outlineUrl',
-            'https://getoutline.org',
-            'shadowsocksUrl',
-            'https://shadowsocks.org',
-            'gitHubUrl',
-            'https://github.com/OutlineFoundation',
-            'redditUrl',
-            'https://www.reddit.com/r/outlinevpn'
-          )}
+          .innerHTML=${this.aboutText()}
         ></section>
       </article>
     `;
+  }
+
+  // GridVPN is built on the open-source Outline client; the attribution below must stay.
+  private aboutText(): string {
+    const args = [
+      'productName',
+      BRAND.productName,
+      'platformName',
+      BRAND.platformName,
+      'websiteUrl',
+      BRAND.websiteUrl,
+      'outlineUrl',
+      'https://getoutline.org',
+      'shadowsocksUrl',
+      'https://shadowsocks.org',
+      'gitHubUrl',
+      'https://github.com/OutlineFoundation/outline-apps',
+    ];
+    const text = this.localize('gridvpn-about', ...args);
+    if (text && text !== 'gridvpn-about') return text;
+    return (
+      `${BRAND.productName} is the VPN app of ${BRAND.platformName}: ${BRAND.tagline} ` +
+      'Connect through ProxyGrid regions or bring your own Outline-compatible server. ' +
+      `Visit <a href="${BRAND.websiteUrl}">proxygrid.net/vpn</a> to learn more.<br><br>` +
+      `${BRAND.productName} is built on the open-source ` +
+      '<a href="https://github.com/OutlineFoundation/outline-apps">Outline client</a> by the ' +
+      '<a href="https://getoutline.org">Outline Foundation</a> and powered by ' +
+      '<a href="https://shadowsocks.org">Shadowsocks</a>. It is not affiliated with or endorsed ' +
+      'by the Outline Foundation. See Licenses for the open-source notices.'
+    );
   }
 }

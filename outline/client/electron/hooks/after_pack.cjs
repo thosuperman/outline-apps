@@ -33,7 +33,7 @@ const {join} = require('node:path');
  * @throws {Error} If `patchelf` is not found or if the RPATH modification fails.
  */
 function patchLinuxRPath(binDir) {
-  const outlineBinFile = join(binDir, 'Outline');
+  const outlineBinFile = join(binDir, 'GridVPN');
 
   try {
     console.log(`Patching RPATH for ${outlineBinFile}`);
@@ -48,7 +48,7 @@ function patchLinuxRPath(binDir) {
   }
 
   try {
-    const DebianInstallFolder = '/opt/Outline';
+    const DebianInstallFolder = '/opt/GridVPN';
     execSync(
       `patchelf --add-rpath "${DebianInstallFolder}" "${outlineBinFile}"`,
       {

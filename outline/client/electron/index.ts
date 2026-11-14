@@ -152,7 +152,7 @@ function setupTray(): void {
   tray.on('click', () => {
     mainWindow?.show();
   });
-  tray.setToolTip('Outline');
+  tray.setToolTip('GridVPN');
   updateTray(TunnelStatus.DISCONNECTED);
 }
 
@@ -489,7 +489,7 @@ function main() {
   // Some APIs can only be used after this event occurs.
   app.on('ready', async () => {
     // To clearly identify app restarts in Sentry.
-    console.info('Outline is starting');
+    console.info('GridVPN is starting');
 
     setupMenu();
     setupTray();

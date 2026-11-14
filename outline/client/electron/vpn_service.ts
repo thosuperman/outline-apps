@@ -47,7 +47,7 @@ export async function establishVpn(tsRequest: StartRequestJson) {
 
       // Network Manager connection name, Use "TUN Connection" instead of "VPN Connection"
       // because Network Manager has a dedicated "VPN Connection" concept that we did not implement
-      connectionName: 'Outline TUN Connection',
+      connectionName: 'GridVPN TUN Connection',
 
       // TUN IP, use '10.0.85.5' to avoid conflict with old '10.0.85.1'
       // left behind on machines that previously ran the AppImage build:

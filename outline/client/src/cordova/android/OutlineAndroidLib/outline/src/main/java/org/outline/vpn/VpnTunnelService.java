@@ -641,7 +641,7 @@ public class VpnTunnelService extends VpnService {
     Notification.Builder builder;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       NotificationChannel channel = new NotificationChannel(
-          NOTIFICATION_CHANNEL_ID, "Outline", NotificationManager.IMPORTANCE_LOW);
+          NOTIFICATION_CHANNEL_ID, getApplicationName(), NotificationManager.IMPORTANCE_LOW);
       NotificationManager notificationManager = getSystemService(NotificationManager.class);
       notificationManager.createNotificationChannel(channel);
       builder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
