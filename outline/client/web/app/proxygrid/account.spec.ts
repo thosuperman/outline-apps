@@ -238,10 +238,12 @@ describe('ProxyGridAccount', () => {
   it('retries once with a fresh token after a 401', async () => {
     const {session, account, api} = setup();
     await session.signIn('a@b.c', 'pw');
-    api.status.and.returnValues(
-      Promise.reject(new ProxyGridApiError(401, 'Unauthorized')),
-      Promise.resolve(status())
-    );
+    let calls = 0;
+    api.status.and.callFake(async () => {
+      // Create the rejection lazily so it is never an unhandled promise.
+      if (calls++ === 0) throw new ProxyGridApiError(401, 'Unauthorized');
+      return status();
+    });
     await account.refresh();
     expect(account.current.status).not.toBeNull();
     expect(account.current.error).toBeNull();
