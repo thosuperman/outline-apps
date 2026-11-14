@@ -225,6 +225,41 @@ describe('ProxyGridAccount', () => {
     expect(api.createKey).not.toHaveBeenCalled();
   });
 
+  it('creates a new key when the listed key has gone (404)', async () => {
+    const {session, account, api, servers} = setup();
+    api.status.and.resolveTo(
+      status({
+        regions: [
+          {
+            region: 'ap-northeast-1',
+            label: 'Tokyo',
+            node_id: 'tyo1',
+            node_status: 'active',
+            key: {key_id: 'gone', region: 'ap-northeast-1', status: 'active'},
+          },
+        ],
+      })
+    );
+    api.keyAccess.and.callFake(async () => {
+      throw new ProxyGridApiError(404, 'key not found');
+    });
+    await session.signIn('a@b.c', 'pw');
+    await account.refresh();
+    await account.ensureRegionServer();
+    expect(api.keyAccess).toHaveBeenCalledOnceWith('gone');
+    expect(api.createKey).toHaveBeenCalledOnceWith('ap-northeast-1');
+    expect(servers.servers.length).toEqual(1);
+  });
+
+  it('moves to the first live region when the saved one is not offered', async () => {
+    const {session, account, prefs} = setup();
+    account.selectRegion('eu-central-1');
+    await session.signIn('a@b.c', 'pw');
+    await account.refresh();
+    expect(account.current.selectedRegion).toEqual('ap-northeast-1');
+    expect(prefs.getItem('proxygrid_region')).toEqual('ap-northeast-1');
+  });
+
   it('refuses to provision when over quota', async () => {
     const {session, account, api} = setup();
     api.status.and.resolveTo(status({over_quota: true, remaining_bytes: 0}));

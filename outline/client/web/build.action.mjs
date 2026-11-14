@@ -76,10 +76,14 @@ export async function main(...parameters) {
       // ProxyGrid website), passed at build time so no deployment-specific value is in Git.
       PROXYGRID_API_URL:
         process.env.PROXYGRID_API_URL || 'https://api.proxygrid.net',
-      PROXYGRID_COGNITO_REGION: process.env.PROXYGRID_COGNITO_REGION || '',
-      PROXYGRID_USER_POOL_ID: process.env.PROXYGRID_USER_POOL_ID || '',
+      // Public values of the proxygrid.net user pool (they also ship in the website's bundle).
+      PROXYGRID_COGNITO_REGION:
+        process.env.PROXYGRID_COGNITO_REGION || 'ap-northeast-1',
+      PROXYGRID_USER_POOL_ID:
+        process.env.PROXYGRID_USER_POOL_ID || 'ap-northeast-1_nHNgcICbT',
       PROXYGRID_USER_POOL_CLIENT_ID:
-        process.env.PROXYGRID_USER_POOL_CLIENT_ID || '',
+        process.env.PROXYGRID_USER_POOL_CLIENT_ID ||
+        '7q16t0jtuhsdtl4ut53b5j88cn',
     })
   );
 

@@ -152,12 +152,15 @@ export class ProxyGridApi {
     }
     if (!response.ok) {
       const obj = (json ?? {}) as {error?: unknown; message?: unknown};
+      const nested = (obj.error ?? {}) as {message?: unknown};
       const msg =
         typeof obj.error === 'string'
           ? obj.error
-          : typeof obj.message === 'string'
-            ? obj.message
-            : `Request failed (${response.status}).`;
+          : typeof nested.message === 'string'
+            ? nested.message
+            : typeof obj.message === 'string'
+              ? obj.message
+              : `Request failed (${response.status}).`;
       throw new ProxyGridApiError(response.status, msg);
     }
     return json as T;

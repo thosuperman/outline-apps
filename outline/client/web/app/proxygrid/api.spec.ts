@@ -98,6 +98,16 @@ describe('ProxyGridApi', () => {
     }
   });
 
+  it('reads nested {error: {message}} bodies', async () => {
+    const {fn} = recordingFetch(403, {
+      error: {message: 'Data allowance used up'},
+    });
+    const api = new ProxyGridApi(async () => 't', 'https://api.test', fn);
+    await expectAsync(api.status()).toBeRejectedWith(
+      jasmine.objectContaining({status: 403, message: 'Data allowance used up'})
+    );
+  });
+
   it('network failures become status 0', async () => {
     const fn = (async () => {
       throw new TypeError('offline');

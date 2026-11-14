@@ -143,6 +143,16 @@ export class ProxyGridAccount {
         try {
           const status = await this.withAuthRetry(() => this.api.status());
           this.lastStatusAt = this.now();
+          // Only some regions may be live (Tokyo first). If the saved choice is not one of
+          // them, move to the first live region so one tap connects.
+          const live = status.regions.filter(r => r.node_status === 'active');
+          if (
+            live.length > 0 &&
+            !status.regions.some(r => r.region === this.state.selectedRegion)
+          ) {
+            this.prefs.set(SELECTED_REGION_PREF, live[0].region);
+            this.state = {...this.state, selectedRegion: live[0].region};
+          }
           this.update({
             status,
             error: null,
@@ -221,11 +231,22 @@ export class ProxyGridAccount {
     const regionStatus = this.state.status?.regions.find(
       r => r.region === region
     );
-    const access = await this.withAuthRetry(() =>
+    // Reuse the existing key (key creation is rate limited per day); create one only when
+    // the region has none, or the listed key has gone (revoked between refreshes).
+    const keyId =
       regionStatus?.key && regionStatus.key.status !== 'revoked'
-        ? this.api.keyAccess(regionStatus.key.key_id)
-        : this.api.createKey(region)
-    );
+        ? regionStatus.key.key_id
+        : null;
+    const access = await this.withAuthRetry(async () => {
+      if (keyId) {
+        try {
+          return await this.api.keyAccess(keyId);
+        } catch (e) {
+          if (!(e instanceof ProxyGridApiError && e.status === 404)) throw e;
+        }
+      }
+      return this.api.createKey(region);
+    });
     try {
       await this.servers.add(access.ssconf_url);
     } catch (e) {

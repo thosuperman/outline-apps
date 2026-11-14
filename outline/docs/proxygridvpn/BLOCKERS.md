@@ -118,7 +118,10 @@ checklist").
 
 ## ProxyGrid account mode (Mode A) end to end
 
-The ProxyGrid backend is not deployed, so `/vpn/*`, dynamic keys and Cognito sign-in cannot be
-exercised. When it is deployed, set repository variables `PROXYGRID_COGNITO_REGION`,
-`PROXYGRID_USER_POOL_ID`, `PROXYGRID_USER_POOL_CLIENT_ID` (public values) and rebuild. Mode B
-(own servers) works without any of this.
+The backend is deployed at https://api.proxygrid.net with the Tokyo node (`ap-northeast-1`,
+node `tyo1`). The client builds with the proxygrid.net user pool by default (public values in
+`client/web/build.action.mjs`; override with `PROXYGRID_COGNITO_REGION`,
+`PROXYGRID_USER_POOL_ID`, `PROXYGRID_USER_POOL_CLIENT_ID`). Until the operator turns on
+`vpn.enabled`, only admin accounts get past `/vpn/status` (others see "VPN is not available
+yet"). An end-to-end sign-in, connect and quota test on a device is still pending. Mode B (own
+servers) works without any of this.
