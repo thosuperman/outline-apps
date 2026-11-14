@@ -94,7 +94,8 @@ async function setAndroidDisplayName() {
         'main',
         'res',
         'values',
-        'strings.xml'
+        // cordova-android writes the name to cdv_strings.xml (older versions: strings.xml).
+        '*strings.xml'
       ),
       from: [
         /<string name="app_name">[^<]*<\/string>/,
