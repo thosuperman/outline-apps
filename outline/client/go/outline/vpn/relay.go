@@ -15,19 +15,66 @@
 package vpn
 
 import (
+	"errors"
 	"io"
 	"log/slog"
 	"math/rand"
+	"net"
+	"os"
+
+	"golang.getoutline.org/sdk/network"
 )
 
-// RelayTraffic copies data from `src` to `dst` until an error occurs.
+// maxConsecutiveReadErrors bounds how long we keep reading a source that only returns errors,
+// so a broken device cannot spin a goroutine forever.
+const maxConsecutiveReadErrors = 100
+
+// isClosedErr reports whether err means the device or connection is gone for good.
+func isClosedErr(err error) bool {
+	return errors.Is(err, io.EOF) || errors.Is(err, os.ErrClosed) || errors.Is(err, net.ErrClosed) ||
+		errors.Is(err, io.ErrClosedPipe) || errors.Is(err, network.ErrClosed)
+}
+
+// RelayTraffic copies packets from `src` to `dst` until `src` or `dst` is closed.
 // It closes `dst` when complete.
 //
-// TODO: retry when err != ErrClosed
+// Each Read returns one IP packet. A packet that fails to write (for example a malformed packet
+// the network stack rejects) is dropped and the relay goes on: stopping on the first such error
+// used to black-hole the tunnel silently while the UI still showed it connected.
 func RelayTraffic(dst io.WriteCloser, src io.Reader) {
-	id := rand.Intn(1000) // A fake gorotuine ID for logging
+	id := rand.Intn(1000) // A fake goroutine ID for logging
 	slog.Debug("relaying traffic ...", "#", id)
-	n, err := io.Copy(dst, src)
-	slog.Debug("relaying traffic done", "#", id, "n", n, "err", err)
+	buf := make([]byte, 65535)
+	var n int64
+	var dropped, readErrs int
+	var err error
+	for {
+		var nr int
+		nr, err = src.Read(buf)
+		if nr > 0 {
+			readErrs = 0
+			if _, werr := dst.Write(buf[:nr]); werr != nil {
+				if isClosedErr(werr) {
+					err = werr
+					break
+				}
+				dropped++
+				slog.Debug("dropped packet", "#", id, "err", werr)
+			} else {
+				n += int64(nr)
+			}
+		}
+		if err != nil {
+			if isClosedErr(err) {
+				break
+			}
+			readErrs++
+			if readErrs >= maxConsecutiveReadErrors {
+				break
+			}
+			slog.Debug("relay read error", "#", id, "err", err)
+		}
+	}
+	slog.Debug("relaying traffic done", "#", id, "n", n, "dropped", dropped, "err", err)
 	dst.Close()
 }

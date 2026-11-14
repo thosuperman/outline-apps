@@ -49,9 +49,9 @@ func GoRelayTraffic(fd int, rd *RemoteDevice) *perrs.PlatformError {
 	rd.mu.Lock()
 	if rd.tun != nil {
 		if err := rd.tun.Close(); err != nil {
-			slog.Info("successfully closed an already existing tun device")
-		} else {
 			slog.Warn("failed to close an already existing tun device", "err", err)
+		} else {
+			slog.Info("successfully closed an already existing tun device")
 		}
 	}
 	rd.tun = tun
