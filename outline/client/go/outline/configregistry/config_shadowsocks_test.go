@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 	"testing"
 
 	"localhost/client/go/configyaml"
@@ -44,6 +45,33 @@ func TestParseShadowsocksConfig_URL(t *testing.T) {
 		require.Equal(t, "chacha20-ietf-poly1305", config.Cipher)
 		require.Equal(t, "SECRET/!@#", config.Secret)
 		require.Equal(t, "HTTP/1.1 ", config.Prefix)
+	})
+
+	t.Run("Fully Base64 Encoded With Padding", func(t *testing.T) {
+		// Legacy keys are often standard base64 with "=" padding.
+		plain := "chacha20-ietf-poly1305:padded-secret@example.com:1234"
+		encoded := base64.StdEncoding.EncodeToString([]byte(plain))
+		require.Contains(t, encoded, "=", "test input must need padding")
+		config, err := parseFromYAMLText("ss://" + encoded + "#legacy")
+		require.NoError(t, err)
+		require.Equal(t, "example.com:1234", config.Endpoint)
+		require.Equal(t, "padded-secret", config.Secret)
+	})
+
+	t.Run("Fully Base64 Encoded With Standard Alphabet", func(t *testing.T) {
+		// "+" only appears in the standard alphabet; find a secret whose encoding has one.
+		var encoded, secret string
+		for i := 0; i < 1000 && encoded == ""; i++ {
+			candidate := fmt.Sprintf("s%d>>>", i)
+			e := base64.RawStdEncoding.EncodeToString([]byte("chacha20-ietf-poly1305:" + candidate + "@example.com:1234"))
+			if strings.Contains(e, "+") && !strings.Contains(e, "/") {
+				encoded, secret = e, candidate
+			}
+		}
+		require.NotEmpty(t, encoded)
+		config, err := parseFromYAMLText("ss://" + encoded)
+		require.NoError(t, err)
+		require.Equal(t, secret, config.Secret)
 	})
 
 	t.Run("Fully Base64 Encoded With Password Containing Host", func(t *testing.T) {

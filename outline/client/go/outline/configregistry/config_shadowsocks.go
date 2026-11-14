@@ -253,13 +253,28 @@ func cutLast(s, sep string) (before, after string, found bool) {
 	return s[:last], s[last+len(sep):], true
 }
 
+// decodeLegacyBase64 decodes the base64 part of a legacy ss:// key. Keys in the wild use both the
+// URL-safe and the standard alphabet, with or without "=" padding; accepting only unpadded
+// URL-safe base64 rejected valid keys whose length needs padding.
+func decodeLegacyBase64(s string) ([]byte, error) {
+	trimmed := strings.TrimRight(s, "=")
+	decoded, err := base64.RawURLEncoding.DecodeString(trimmed)
+	if err == nil {
+		return decoded, nil
+	}
+	if decodedStd, errStd := base64.RawStdEncoding.DecodeString(trimmed); errStd == nil {
+		return decodedStd, nil
+	}
+	return nil, err
+}
+
 // parseShadowsocksLegacyBase64URL parses URL based on legacy base64 format:
 // https://shadowsocks.org/doc/configs.html#uri-and-qr-code
 func parseShadowsocksLegacyBase64URL(url url.URL) (*ShadowsocksConfig, error) {
 	if url.Host == "" {
 		return nil, errors.New("host not specified")
 	}
-	decoded, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(url.Host)
+	decoded, err := decodeLegacyBase64(url.Host)
 	if err != nil {
 		// If decoding fails, return the original url with error
 		return nil, fmt.Errorf("failed to decode host string [%v]: %w", url.String(), err)
