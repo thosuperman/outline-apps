@@ -194,11 +194,16 @@ func closeVPNNoLock() (err error) {
 	slog.Debug("terminating the global vpn connection...", "id", conn.ID)
 	conn.setStatus(ConnectionDisconnecting)
 	defer func() {
+		// Always forget the connection, even if the platform close failed (for example
+		// NetworkManager did not confirm the TUN device removal in time). Keeping it would make
+		// every later EstablishVPN fail with the same close error until the app restarts.
 		if err == nil {
 			slog.Info("vpn connection terminated", "id", conn.ID)
-			conn.setStatus(ConnectionDisconnected)
-			conn = nil
+		} else {
+			slog.Warn("vpn connection terminated with close error", "id", conn.ID, "err", err)
 		}
+		conn.setStatus(ConnectionDisconnected)
+		conn = nil
 	}()
 
 	// Cancel the Establish process and wait
