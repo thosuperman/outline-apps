@@ -37,6 +37,10 @@ NSString *const kDefaultPathKey = @"defaultPath";
 @property (nonatomic, nullable) NSString *tunnelId;
 @property (nonatomic, nullable) NSString *transportConfig;
 @property (nonatomic) dispatch_queue_t packetQueue;
+// The packetFlow read loop runs once per provider instance, for its whole life.
+@property (atomic) BOOL packetLoopStarted;
+// Set by stopTunnel; a start completion or network change that arrives later must do nothing.
+@property (atomic) BOOL stopped;
 @end
 
 @implementation PacketTunnelProvider
@@ -97,9 +101,11 @@ NSString *const kDefaultPathKey = @"defaultPath";
   bool isOnDemand = isOnDemandNumber != nil && [isOnDemandNumber intValue] == 1;
   DDLogDebug(@"isOnDemand is %d", isOnDemand);
 
+  self.stopped = NO;
   BOOL isRestart = self.remoteDevice != nil;
   if (isRestart) {
     [self.remoteDevice close];
+    self.remoteDevice = nil;
   }
   DDLogDebug(@"isRestart is %d", isRestart);
 
@@ -110,10 +116,14 @@ NSString *const kDefaultPathKey = @"defaultPath";
 
   [self startRouting:[SwiftBridge getTunnelNetworkSettings]
           completion:^(NSError *_Nullable error) {
+            if (self.stopped) {
+              // stopTunnel ran while the network settings were being applied.
+              return startDone([SwiftBridge newInternalOutlineErrorWithMessage:@"tunnel stopped while starting"]);
+            }
             if (error != nil) {
               return startDone([SwiftBridge newOutlineErrorFromNsError:error]);
             }
-            PlaterrorsPlatformError *relayErr = [self relayTraffic:isRestart];
+            PlaterrorsPlatformError *relayErr = [self relayTraffic];
             if (relayErr != nil) {
               return startDone([SwiftBridge newOutlineErrorFromPlatformError:relayErr]);
             }
@@ -125,11 +135,15 @@ NSString *const kDefaultPathKey = @"defaultPath";
 - (void)stopTunnelWithReason:(NEProviderStopReason)reason
            completionHandler:(void (^)(void))completionHandler {
   DDLogInfo(@"Stopping tunnel, reason: %ld", (long)reason);
+  self.stopped = YES;
   [self stopListeningForNetworkChanges];
   PlaterrorsPlatformError *err = [self.remoteDevice close];
   if (err != nil) {
     DDLogWarn(@"Failed to close remote device: %@", err.error);
   }
+  // Forget the closed device, so a later start is not treated as a restart and network-change
+  // handling does not act on a stopped tunnel.
+  self.remoteDevice = nil;
   completionHandler();
 }
 
@@ -193,6 +207,10 @@ NSString *const kDefaultPathKey = @"defaultPath";
 
 - (void)handleNetworkChange:(NWPath *)newDefaultPath {
   DDLogInfo(@"Network connectivity changed");
+  if (self.stopped || self.remoteDevice == nil) {
+    DDLogInfo(@"Tunnel is not running, ignoring network change.");
+    return;
+  }
   if (newDefaultPath.status == NWPathStatusSatisfied) {
     DDLogInfo(@"Reconnecting tunnel.");
     [self.remoteDevice notifyNetworkChanged];
@@ -254,7 +272,12 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
 }
 
 - (BOOL)write:(NSData *_Nullable)packet n:(long *)n error:(NSError *_Nullable *)error {
-  [self.packetFlow writePackets:@[ packet ] withProtocols:@[ @(AF_INET) ]];
+  // The tunnel carries IPv4 and IPv6; the protocol comes from the IP version nibble.
+  NSNumber *protocol = @(AF_INET);
+  if (packet.length > 0 && (((const uint8_t *)packet.bytes)[0] >> 4) == 6) {
+    protocol = @(AF_INET6);
+  }
+  [self.packetFlow writePackets:@[ packet ] withProtocols:@[ protocol ]];
   *n = packet.length;
   return YES;
 }
@@ -291,6 +314,7 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
     if (healthErr != nil) {
       DDLogError(@"Remote device is not healthy: %@", healthErr.error);
       [self.remoteDevice close];
+      self.remoteDevice = nil;
       return healthErr;
     }
     DDLogInfo(@"Remote device is healthy.");
@@ -306,7 +330,7 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
   return nil;
 }
 
-- (PlaterrorsPlatformError*)relayTraffic:(BOOL)isRestart {
+- (PlaterrorsPlatformError*)relayTraffic {
   __weak PacketTunnelProvider *weakSelf = self;
   PlaterrorsPlatformError *relayErr = Tun2socksGoRelayTrafficOneWay(weakSelf, self.remoteDevice);
   if (relayErr != nil) {
@@ -315,7 +339,10 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
   }
   DDLogInfo(@"Relaying traffic from remote device to TUN");
 
-  if (!isRestart) {
+  // Start the packetFlow read loop exactly once. Keying this on "restart" skipped the loop when a
+  // first attempt failed before reaching here, leaving a connected tunnel that read nothing.
+  if (!self.packetLoopStarted) {
+    self.packetLoopStarted = YES;
     dispatch_async(self.packetQueue, ^{
       [weakSelf processPackets];
     });

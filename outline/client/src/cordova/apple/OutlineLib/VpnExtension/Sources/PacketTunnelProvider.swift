@@ -17,6 +17,9 @@ import NetworkExtension
 import OutlineError
 import Tun2socks
 
+// Must align with: client/go/outline/configregistry/outline_dns_intercept.go
+let kFakeDnsAddress = "169.254.113.53"
+
 /// SwiftBridge is a transitional class to allow the incremental migration of our PacketTunnelProvider from Objective-C to Swift.
 @objcMembers
 public class SwiftBridge: NSObject {
@@ -30,13 +33,26 @@ public class SwiftBridge: NSObject {
     // Configure VPN address and routing.
     let vpnAddress = selectVpnAddress(interfaceAddresses: getNetworkInterfaceAddresses())
     let ipv4Settings = NEIPv4Settings(addresses: [vpnAddress], subnetMasks: ["255.255.255.0"])
-    ipv4Settings.includedRoutes = [NEIPv4Route.default()]
+    // The fake DNS address below lies inside the excluded 169.254.0.0/16, so route it into the
+    // tunnel explicitly, as Android and Windows do, rather than rely on resolver scoping.
+    ipv4Settings.includedRoutes = [
+      NEIPv4Route.default(),
+      NEIPv4Route(destinationAddress: kFakeDnsAddress, subnetMask: "255.255.255.255"),
+    ]
     ipv4Settings.excludedRoutes = getExcludedIpv4Routes()
     settings.ipv4Settings = ipv4Settings
 
+    // Capture IPv6 too. With only IPv4 settings, IPv6 traffic (including connections to AAAA
+    // answers resolved through the tunnel) left through the physical interface, bypassing the
+    // proxy. In the tunnel it is relayed like IPv4; if the server cannot reach IPv6, those
+    // connections fail fast and apps fall back to IPv4 instead of leaking.
+    let ipv6Settings = NEIPv6Settings(addresses: ["fd66:6f75:746c::1"], networkPrefixLengths: [64])
+    ipv6Settings.includedRoutes = [NEIPv6Route.default()]
+    settings.ipv6Settings = ipv6Settings
+
     // A "fake" local DNS resolver. Outline will intercept the real resolver at this address.
     // Must align with: client/go/outline/configregistry/outline_dns_intercept.go
-    settings.dnsSettings = NEDNSSettings(servers: ["169.254.113.53"])
+    settings.dnsSettings = NEDNSSettings(servers: [kFakeDnsAddress])
 
     return settings
   }
@@ -162,9 +178,10 @@ func getNetworkInterfaceAddresses() -> [String] {
 
   var interface = interfaces
   while interface != nil {
-    // Only consider IPv4 interfaces.
-    if interface!.pointee.ifa_addr.pointee.sa_family == UInt8(AF_INET) {
-      let addr = interface!.pointee.ifa_addr!.withMemoryRebound(to: sockaddr_in.self, capacity: 1) {
+    // Only consider IPv4 interfaces. ifa_addr may be NULL (getifaddrs(3)); dereferencing it
+    // unconditionally crashed the extension on start and on network changes.
+    if let sockAddr = interface!.pointee.ifa_addr, sockAddr.pointee.sa_family == UInt8(AF_INET) {
+      let addr = sockAddr.withMemoryRebound(to: sockaddr_in.self, capacity: 1) {
         $0.pointee.sin_addr
       }
       if let ip = String(cString: inet_ntoa(addr), encoding: .utf8) {
