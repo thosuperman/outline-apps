@@ -309,9 +309,18 @@ func (s *ssServer) serveUDP() {
 			assocs[client.String()] = a
 			s.udpAssocs.Add(1)
 			go func(client net.Addr, conn *net.UDPConn) {
+				// Idle associations expire, as on a real server, so the test process does not
+				// accumulate server-side goroutines.
+				defer func() {
+					mu.Lock()
+					delete(assocs, client.String())
+					mu.Unlock()
+					conn.Close()
+				}()
 				rbuf := make([]byte, 65535)
 				out := make([]byte, 65535+128)
 				for {
+					conn.SetReadDeadline(time.Now().Add(time.Second))
 					rn, from, err := conn.ReadFromUDPAddrPort(rbuf)
 					if err != nil {
 						return
@@ -561,7 +570,8 @@ func TestE2E_SessionCleanupReleasesGoroutines(t *testing.T) {
 		require.NoError(t, c.EndSession())
 	}
 	// Associations close when the sender closes; give the relays a moment to unwind.
+	// Health checks started by StartSession may run for up to ~8 s after EndSession.
 	require.Eventually(t, func() bool {
 		return runtime.NumGoroutine() <= baseline+10
-	}, 15*time.Second, 200*time.Millisecond, "goroutines: baseline %d, now %d", baseline, runtime.NumGoroutine())
+	}, 25*time.Second, 200*time.Millisecond, "goroutines: baseline %d, now %d", baseline, runtime.NumGoroutine())
 }

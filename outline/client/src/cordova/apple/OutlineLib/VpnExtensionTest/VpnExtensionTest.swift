@@ -35,8 +35,17 @@ final class VpnExtensionTest: XCTestCase {
     XCTAssertTrue(kVpnSubnetCandidates.values.contains(settings.ipv4Settings?.addresses[0] ?? ""))
     XCTAssertEqual(["255.255.255.0"], settings.ipv4Settings?.subnetMasks)
     
-    XCTAssertEqual([NEIPv4Route.default()], settings.ipv4Settings?.includedRoutes)
+    // Default route plus the fake DNS /32, which sits inside the excluded 169.254.0.0/16.
+    let included = settings.ipv4Settings?.includedRoutes ?? []
+    XCTAssertEqual(2, included.count)
+    XCTAssertEqual(NEIPv4Route.default(), included.first)
+    XCTAssertEqual("169.254.113.53", included.last?.destinationAddress)
+    XCTAssertEqual("255.255.255.255", included.last?.destinationSubnetMask)
     XCTAssertEqual(15, settings.ipv4Settings?.excludedRoutes?.count ?? 0)
+
+    // IPv6 is captured by the tunnel instead of leaking around it.
+    XCTAssertEqual(1, settings.ipv6Settings?.addresses.count)
+    XCTAssertEqual([NEIPv6Route.default()], settings.ipv6Settings?.includedRoutes)
 
     XCTAssertEqual(["169.254.113.53"], settings.dnsSettings?.servers)
   }
