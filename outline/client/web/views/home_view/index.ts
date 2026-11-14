@@ -32,16 +32,14 @@ function emit(el: HTMLElement, name: string, detail: object = {}) {
   );
 }
 
-export const PROXYGRIDVPN_MARK = svg`
-  <svg viewBox="0 0 1024 1024" aria-hidden="true">
-    <rect width="1024" height="1024" rx="232" fill="var(--grid-vpn, #5b5bd6)"/>
-    <path d="M512 196 L774 292 V500 C774 662 664 776 512 836 C360 776 250 662 250 500 V292 Z"
-      fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="40" stroke-linejoin="round"/>
-    <path d="M404 616 L512 508 L620 400" fill="none" stroke="#2dd4a0" stroke-width="40"
-      stroke-linecap="round"/>
-    <circle cx="404" cy="616" r="30" fill="#fff"/><circle cx="620" cy="400" r="30" fill="#fff"/>
-    <circle cx="404" cy="400" r="30" fill="#fff"/><circle cx="620" cy="616" r="30" fill="#fff"/>
-    <circle cx="512" cy="508" r="50" fill="#2dd4a0" stroke="#fff" stroke-width="16"/>
+// The ProxyGridVPN mark, identical to the website's VpnMark (proxygrid frontend/src/ui).
+export const APP_MARK = svg`
+  <svg viewBox="0 0 48 48" aria-hidden="true">
+    <rect x="2" y="2" width="44" height="44" rx="12" fill="#5b5bd6"/>
+    <g stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity="0.92">
+      <path d="M17 12v24M31 12v24M12 17h24M12 31h24"/>
+    </g>
+    <circle cx="31" cy="31" r="5" fill="#0e9f6e" stroke="#fff" stroke-width="2.2"/>
   </svg>`;
 
 /**
@@ -475,7 +473,7 @@ export class HomeView extends LitElement {
 
   private renderSignIn() {
     return html`<div class="brand">
-        ${PROXYGRIDVPN_MARK}
+        ${APP_MARK}
         <h2>${BRAND.productName}</h2>
         <p class="sub">${BRAND.tagline}</p>
       </div>

@@ -53,15 +53,13 @@ $RENDER "$MARK" 16 "$O/icon-16.png" 32 "$O/icon-32.png" 64 "$O/icon-64.png" \
   128 "$O/icon-128.png" 256 "$O/icon-256.png" 512 "$O/icon-512.png" 1024 "$O/icon-1024.png"
 $RENDER "$FG" 1024 "$CLIENT/src/cordova/apple/xcode/AppIcon.icon/Assets/icon-1024.png"
 
-# macOS menu-bar (status item) template images: black glyph, the system tints it.
+# macOS menu-bar (status item) template images: black glyph, the system tints it. Disconnected
+# shows the exit node hollow, connected shows it solid.
 SB="$CLIENT/src/cordova/apple/xcode/Outline/Classes/AppKitBridge/Resources/Assets.xcassets"
-$RENDER "$GLYPH" 33 "$SB/status_bar_button_image.imageset/outline-black-off-2x.png"
-cat > "$TMP/glyph-on.svg" <<'SVG'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <path d="M512 150 L800 256 V484 C800 662 680 788 512 854 C344 788 224 662 224 484 V256 Z" fill="#000"/>
-</svg>
-SVG
-$RENDER "$TMP/glyph-on.svg" 33 "$SB/status_bar_button_image_connected.imageset/outline-black-on-2x.png"
+sed 's#<circle cx="700" cy="700" r="150" fill="\#000"/>#<circle cx="700" cy="700" r="120" fill="none" stroke="\#000" stroke-width="60"/>#' \
+  "$GLYPH" > "$TMP/glyph-off.svg"
+$RENDER "$TMP/glyph-off.svg" 33 "$SB/status_bar_button_image.imageset/outline-black-off-2x.png"
+$RENDER "$GLYPH" 33 "$SB/status_bar_button_image_connected.imageset/outline-black-on-2x.png"
 
 # --- Electron (Windows/Linux) ---
 E="$CLIENT/electron/icons"
@@ -80,7 +78,7 @@ done
 iconutil -c icns -o "$E/mac/icon.icns" "$ICONSET"
 
 # Tray icons (Electron): colored mark when connected, gray when disconnected.
-sed -e 's/#6E6EE6/#9AA3AF/' -e 's/#3A3AB0/#6B7482/' -e 's/#2DD4A0/#CBD0D8/g' -e 's/#0E9F6E/#CBD0D8/' \
+sed -e 's/#6767DC/#9AA3AF/' -e 's/#4F4FCB/#6B7482/' -e 's/#0E9F6E/#CBD0D8/' \
   "$MARK" > "$TMP/mark-off.svg"
 $RENDER "$MARK" 1024 "$CLIENT/resources/tray/connected.png"
 $RENDER "$TMP/mark-off.svg" 1024 "$CLIENT/resources/tray/disconnected.png"
@@ -100,6 +98,17 @@ for spec in "1728 $CLIENT/resources/splashscreen/android/splash_screen_icon_xxxh
 SVG
   $RENDER "$TMP/splash.svg" "$size" "$out"
 done
+
+# --- Privacy dialog artwork (228x316, mark centred) ---
+cat > "$TMP/privacy.svg" <<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 316 316">
+  <svg x="58" y="58" width="200" height="200" viewBox="0 0 1024 1024">
+    $(sed -e '1d' -e '$d' "$MARK")
+  </svg>
+</svg>
+SVG
+$RENDER "$TMP/privacy.svg" 316 "$TMP/privacy316.png"
+sips -c 316 228 "$TMP/privacy316.png" --out "$CLIENT/web/assets/privacy-lock.png" >/dev/null
 
 # --- Web UI assets ---
 W="$CLIENT/web/assets"
