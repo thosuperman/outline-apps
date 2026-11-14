@@ -207,3 +207,41 @@ func TestOutlineDNS_CopiesOfAQueryInFlightShareOneSocket(t *testing.T) {
 	wg.Wait()
 	require.Equal(t, int32(1), l.sockets.Load()-before)
 }
+
+// staleCheckPacketListener makes the first UDP health check slow and failing (the old network)
+// and every later socket healthy (the new network).
+type staleCheckPacketListener struct {
+	countingPacketListener
+	calls       atomic.Int32
+	firstCalled chan struct{}
+}
+
+func (l *staleCheckPacketListener) ListenPacket(ctx context.Context) (net.PacketConn, error) {
+	if l.calls.Add(1) == 1 {
+		close(l.firstCalled)
+		time.Sleep(300 * time.Millisecond)
+		return nil, errors.New("old network is gone")
+	}
+	return l.countingPacketListener.ListenPacket(ctx)
+}
+
+// A UDP check started on the previous network can finish after the check for the current one.
+// Its failure must not switch DNS back to truncate mode (regression: checks were unordered).
+func TestOutlineDNS_StaleUDPCheckDoesNotOverrideNewerResult(t *testing.T) {
+	l := &staleCheckPacketListener{firstCalled: make(chan struct{})}
+	sd := &Dialer[transport.StreamConn]{ConnectionProviderInfo{ConnTypeTunneled, "proxy:1234"},
+		func(ctx context.Context, addr string) (transport.StreamConn, error) {
+			return nil, errors.New("not used")
+		}}
+	pair, err := wrapTransportPairWithOutlineDNS(sd, &PacketListener{ConnectionProviderInfo{ConnTypeTunneled, "proxy:1234"}, l})
+	require.NoError(t, err)
+
+	pair.PacketRelay.NotifyNetworkChanged() // old network: slow, failing check
+	<-l.firstCalled
+	pair.PacketRelay.NotifyNetworkChanged() // new network: fast, healthy check
+
+	// Let both checks finish; the stale failure lands last.
+	time.Sleep(600 * time.Millisecond)
+	require.False(t, isTruncatedDNS(queryOutlineDNS(t, pair.PacketRelay, dnsQuery(7, "after"))),
+		"DNS must stay in forwarding mode after the newer check succeeded")
+}
