@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- GridVPN foreground layer (no background), for Icon Composer and Android adaptive icons. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6E6EE6"/>
+      <stop offset="1" stop-color="#3A3AB0"/>
+    </linearGradient>
+    <linearGradient id="route" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#2DD4A0"/>
+      <stop offset="1" stop-color="#0E9F6E"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- shield -->
+  <path d="M512 196 L774 292 V500 C774 662 664 776 512 836 C360 776 250 662 250 500 V292 Z"
+        fill="#FFFFFF" fill-opacity="0.10" stroke="#FFFFFF" stroke-width="34" stroke-linejoin="round"/>
+  <!-- grid nodes -->
+  <g fill="#FFFFFF">
+    <circle cx="404" cy="400" r="26"/>
+    <circle cx="512" cy="400" r="26" fill-opacity="0.55"/>
+    <circle cx="620" cy="400" r="26"/>
+    <circle cx="404" cy="508" r="26" fill-opacity="0.55"/>
+    <circle cx="620" cy="508" r="26" fill-opacity="0.55"/>
+    <circle cx="404" cy="616" r="26"/>
+    <circle cx="512" cy="616" r="26" fill-opacity="0.55"/>
+    <circle cx="620" cy="616" r="26"/>
+  </g>
+  <!-- secured route through the centre node -->
+  <path d="M404 616 L512 508 L620 400" fill="none" stroke="url(#route)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="404" cy="616" r="26" fill="#FFFFFF"/>
+  <circle cx="620" cy="400" r="26" fill="#FFFFFF"/>
+  <circle cx="512" cy="508" r="44" fill="#2DD4A0" stroke="#FFFFFF" stroke-width="14"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Monochrome GridVPN glyph for tray icons, Android notification icons and the header. -->
+  <path d="M512 150 L800 256 V484 C800 662 680 788 512 854 C344 788 224 662 224 484 V256 Z"
+        fill="none" stroke="#000" stroke-width="64" stroke-linejoin="round"/>
+  <g fill="#000">
+    <circle cx="396" cy="384" r="34"/><circle cx="628" cy="384" r="34"/>
+    <circle cx="396" cy="616" r="34"/><circle cx="628" cy="616" r="34"/>
+  </g>
+  <path d="M396 616 L512 500 L628 384" fill="none" stroke="#000" stroke-width="60" stroke-linecap="round"/>
+  <circle cx="512" cy="500" r="56" fill="#000"/>
+</svg>

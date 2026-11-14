@@ -15,7 +15,7 @@
  */
 
 html {
-  background: #efefef;
+  background: #fbfbfc;
 }
 
 body {
@@ -30,38 +30,63 @@ body {
   /* tokens */
   --min-supported-device-width: 320px;
 
-  --outline-primary: hsl(170, 60%, 46%);
-  --outline-primary-dark: hsl(176, 97%, 26%);
-  --outline-primary-rgb: 47, 186, 156;
+  /*
+   * GridVPN design tokens, shared with the ProxyGrid website (frontend/src/theme/theme.js):
+   * "infrastructure ink" neutrals, indigo for the VPN product and emerald for a healthy,
+   * connected tunnel. The --outline-* names are kept so existing components pick them up.
+   */
+  --grid-vpn: #5b5bd6;
+  --grid-vpn-strong: #4646c2;
+  --grid-vpn-soft: #ececfc;
+  --grid-proxy: #0e9f6e;
+  --grid-connected: #0e9f6e;
+  --grid-connected-soft: #def7ec;
+  --grid-warning: #d9822b;
+  --grid-ink-50: #f7f8fa;
+  --grid-ink-100: #eef0f3;
+  --grid-ink-200: #e2e5ea;
+  --grid-ink-300: #cbd0d8;
+  --grid-ink-400: #98a1ae;
+  --grid-ink-500: #6b7482;
+  --grid-ink-700: #343a46;
+  --grid-ink-800: #1f232b;
+  --grid-ink-900: #13161b;
+  --grid-ink-950: #0b0d10;
+  --grid-radius-sm: 6px;
+  --grid-radius-md: 10px;
+  --grid-radius-lg: 14px;
+  --grid-radius-xl: 20px;
+  --grid-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
 
-  --outline-primary-medium: hsl(172, 60%, 72%);
-  --outline-primary-light: hsl(174, 58%, 91%);
+  --outline-primary: var(--grid-vpn);
+  --outline-primary-dark: var(--grid-vpn-strong);
+  --outline-primary-rgb: 91, 91, 214;
 
-  /* RGB values for primary color */
-  --outline-dark-primary: hsl(200, 19%, 18%);
-  --outline-error: hsl(4, 90%, 58%);
-  --outline-warning: hsl(52, 100%, 49%);
+  --outline-primary-medium: #b4b4f0;
+  --outline-primary-light: var(--grid-vpn-soft);
 
-  --outline-black: hsl(0, 0%, 0%);
-  --outline-off-black: hsl(0, 0%, 15%);
-  --outline-dark-gray: hsl(213, 5%, 39%);
-  --outline-medium-gray: hsl(0, 0%, 45%);
-  --outline-light-gray: hsl(0, 0%, 95%);
-  --outline-white: hsl(0, 0%, 100%);
+  --outline-dark-primary: var(--grid-ink-900);
+  --outline-error: #d93f3f;
+  --outline-warning: var(--grid-warning);
 
-  /* New dark mode colors - matching Outline Manager */
-  --outline-dark-bg: hsl(203, 19%, 14%);
-  /* Dark background from Outline Manager */
-  --outline-dark-card: hsl(203, 12%, 22%);
-  /* Card background for dark mode */
-  --outline-dark-footer: hsl(200, 19%, 18%);
-  /* Footer background for dark mode */
-  --outline-dark-border: hsl(200, 18%, 26%);
-  /* Border color for dark mode */
+  --outline-black: var(--grid-ink-900);
+  --outline-off-black: var(--grid-ink-800);
+  --outline-dark-gray: var(--grid-ink-700);
+  --outline-medium-gray: var(--grid-ink-500);
+  --outline-light-gray: var(--grid-ink-50);
+  --outline-white: #ffffff;
 
-  --outline-font-family: Roboto, sans-serif;
+  /* Dark theme surfaces */
+  --outline-dark-bg: var(--grid-ink-950);
+  --outline-dark-card: #111419;
+  --outline-dark-footer: #15191f;
+  --outline-dark-border: #232832;
 
-  --outline-corner: 0.5rem;
+  --outline-font-family: 'Inter', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+
+  --outline-corner: var(--grid-radius-md);
 
   --outline-large-gutter: 2rem;
   --outline-gutter: 1rem;
@@ -74,12 +99,12 @@ body {
   --outline-text-color: var(--outline-black);
   --outline-label-color: var(--outline-medium-gray);
   --outline-hairline: 1px solid hsl(0, 0%, 85%);
-  --outline-elevation-color: hsla(0, 0%, 0%, 0.10);
+  --outline-elevation-color: hsla(0, 0%, 0%, 0.1);
   --outline-elevation: var(--outline-elevation-color) 2px 2px 4px 0px;
-  --outline-icon-color:rgb(73, 69, 79);
+  --outline-icon-color: rgb(73, 69, 79);
 
-  --outline-partial-connection-color: var(--outline-primary-light);
-  --outline-complete-connection-color: var(--outline-primary-medium);
+  --outline-partial-connection-color: var(--grid-vpn-soft);
+  --outline-complete-connection-color: var(--grid-connected);
 
   --outline-comms-dialog-primary-background-color: var(--outline-dark-primary);
   --outline-comms-dialog-primary-text-color: hsl(0, 0%, 87%);
@@ -94,15 +119,17 @@ body {
   --mdc-typography-font-family: var(--outline-font-family);
   --mdc-theme-primary: var(--outline-primary);
 
-  --md-ref-typeface-brand: 'Jigsaw Sans';
+  --md-ref-typeface-brand: var(--outline-font-family);
   --md-ref-typeface-plain: var(--outline-font-family);
 
   /* Style Material inputs */
-  --md-dialog-container-color: var(--outline-app-dialog-primary-background-color);
+  --md-dialog-container-color: var(
+    --outline-app-dialog-primary-background-color
+  );
   --md-dialog-headline-color: var(--outline-text-color);
   --md-dialog-supporting-text-color: var(--outline-text-color);
   --md-filled-button-container-color: var(--outline-primary);
-  --md-filled-button-label-text-color: var(--outline-text-color);
+  --md-filled-button-label-text-color: #ffffff;
   --md-filled-text-field-container-color: var(--outline-input-bg);
   --md-filled-text-field-input-text-color: var(--outline-input-text);
   --md-menu-container-color: var(--outline-card-background);
@@ -130,13 +157,16 @@ body {
 
   /* default light theme */
   --outline-splash-title-color: var(--outline-primary-dark);
-  --outline-background: var(--outline-white);
+  --outline-background: #fbfbfc;
+  --grid-surface-subtle: var(--grid-ink-50);
+  --grid-surface-inset: var(--grid-ink-100);
   --outline-card-background: var(--outline-white);
   --outline-card-footer: var(--outline-light-gray);
   --outline-text-color: var(--outline-black);
   --outline-label-color: var(--outline-medium-gray);
-  --outline-hairline: 1px solid hsl(0, 0%, 85%);
-  --outline-elevation: rgb(0 0 0 / 30%) 0px 2px 3px 2px;
+  --outline-hairline: 1px solid var(--grid-ink-200);
+  --outline-elevation: 0 1px 2px rgb(19 22 27 / 6%),
+    0 4px 16px rgb(19 22 27 / 6%);
   --outline-app-dialog-primary-background-color: var(--outline-white);
 
   /* Input field colors for light mode */
@@ -149,15 +179,25 @@ body {
 
 /* Class-based dark mode - applied when user selects dark theme */
 html.dark {
-  --outline-error: hsl(4, 90%, 62%);
+  --outline-error: #f26d6d;
+  --outline-primary: #8b8cf5;
+  --outline-primary-dark: #a5a6f8;
+  --outline-primary-rgb: 139, 140, 245;
+  --outline-primary-light: rgb(139 140 245 / 14%);
+  --grid-vpn: #8b8cf5;
+  --grid-vpn-soft: rgb(139 140 245 / 14%);
+  --grid-connected: #2dd4a0;
+  --grid-connected-soft: rgb(45 212 160 / 14%);
+  --grid-surface-subtle: #15191f;
+  --grid-surface-inset: #0e1115;
 
   --outline-background: var(--outline-dark-bg);
   --outline-card-background: var(--outline-dark-card);
   --outline-card-footer: var(--outline-dark-footer);
-  --outline-text-color: var(--outline-white);
-  --outline-label-color: hsl(0, 0%, 70%);
+  --outline-text-color: #eceef1;
+  --outline-label-color: #9aa3af;
   --outline-hairline: 1px solid var(--outline-dark-border);
-  --outline-elevation: rgb(0 0 0 / 30%) 0px 2px 3px 2px;
+  --outline-elevation: 0 1px 2px rgb(0 0 0 / 40%), 0 6px 20px rgb(0 0 0 / 30%);
   --outline-comms-dialog-primary-background-color: var(--outline-dark-primary);
   --outline-app-dialog-primary-background-color: var(--outline-dark-card);
 
@@ -222,13 +262,6 @@ html,
 body {
   color: var(--outline-text-color);
   background-color: var(--outline-background);
-}
-
-@font-face {
-  font-family: 'Jigsaw Sans';
-  font-style: normal;
-  font-weight: 500;
-  src: url(./assets/jigsaw_sans_medium.woff2) format('woff2');
 }
 
 @font-face {

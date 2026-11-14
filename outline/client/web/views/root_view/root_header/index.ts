@@ -11,9 +11,12 @@
   limitations under the License.
 */
 
-import {LitElement, html, css} from 'lit';
+import {LitElement, html, css, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
+
+import {BRAND} from '../../../app/brand';
+import {GRIDVPN_MARK} from '../../home_view';
 
 @customElement('root-header')
 export class RootHeader extends LitElement {
@@ -25,9 +28,10 @@ export class RootHeader extends LitElement {
     header {
       align-items: center;
       justify-content: space-between;
-      background-color: var(--outline-dark-primary);
+      background-color: var(--outline-background);
+      border-bottom: var(--outline-hairline);
       display: flex;
-      min-height: 64px;
+      min-height: 56px;
       /* Where the WebView extends under the status bar (iOS with
        * viewport-fit=cover), grow by the inset so the bar sits on the header
        * color. Elsewhere the inset is 0. */
@@ -35,16 +39,25 @@ export class RootHeader extends LitElement {
     }
 
     h1 {
-      color: var(--outline-white);
-      font-family: 'Jigsaw Sans', 'Roboto', sans-serif;
-      font-size: 24px;
-      font-weight: 500;
+      align-items: center;
+      color: var(--outline-text-color);
+      display: flex;
+      font-family: var(--outline-font-family);
+      font-size: 17px;
+      font-weight: 650;
+      gap: 8px;
+      letter-spacing: -0.01em;
       margin: 0;
       user-select: none;
     }
 
+    h1 svg {
+      height: 24px;
+      width: 24px;
+    }
+
     md-icon {
-      color: var(--outline-white);
+      color: var(--outline-text-color);
     }
 
     .hidden {
@@ -61,7 +74,11 @@ export class RootHeader extends LitElement {
         : html`<md-icon-button @click=${this.openNavigation}>
             <md-icon>menu</md-icon>
           </md-icon-button>`}
-      <h1>${this.title || 'Outline'}</h1>
+      <h1>
+        ${this.showBackButton ? nothing : GRIDVPN_MARK}${this.showBackButton
+          ? this.title || BRAND.productName
+          : BRAND.productName}
+      </h1>
       <md-icon-button
         class=${classMap({hidden: !this.showAddButton})}
         @click=${this.openAddAccessKey}
