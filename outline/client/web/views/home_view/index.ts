@@ -383,6 +383,29 @@ export class HomeView extends LitElement {
       text-align: center;
       margin: 0;
     }
+    .remaining {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin: 0 0 6px;
+    }
+    .links {
+      display: flex;
+      gap: 14px;
+    }
+    .mode-note {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8125rem;
+      color: var(--outline-label-color);
+      padding: 12px 14px;
+      border-radius: var(--grid-radius-md);
+      background: var(--grid-surface-inset);
+    }
+    .mode-note strong {
+      color: var(--outline-text-color);
+      font-size: 0.875rem;
+    }
     .alert {
       border-radius: var(--grid-radius-md);
       padding: 10px 12px;
@@ -413,8 +436,22 @@ export class HomeView extends LitElement {
       </div>
       ${this.mode === 'proxygrid'
         ? this.renderProxyGrid()
-        : html`<slot name="own-servers"></slot>`}
+        : this.renderOwnServers()}
     </div>`;
+  }
+
+  /** Mode B: the user's own Outline/Shadowsocks servers, independent of ProxyGrid. */
+  private renderOwnServers() {
+    return html`<div class="mode-note" role="note">
+        <strong>${this.t('proxygridvpn-own-title', 'Your own servers')}</strong>
+        <span
+          >${this.t(
+            'proxygridvpn-own-note',
+            'Use any Outline or ss:// key. Keys are stored only on this device, never sent to ProxyGrid, and need no subscription.'
+          )}</span
+        >
+      </div>
+      <slot name="own-servers"></slot>`;
   }
 
   private tab(mode: HomeMode, label: string) {
@@ -694,7 +731,20 @@ export class HomeView extends LitElement {
       ? Math.min(100, (s.used_bytes / s.plan.quota_bytes) * 100)
       : 0;
     const renews = new Date(s.plan.period_end);
+    const queued = s.queued_plan;
+    const queuedName = queued
+      ? queued.plan.charAt(0).toUpperCase() + queued.plan.slice(1)
+      : '';
+    const queuedStart = queued ? new Date(queued.period_start) : null;
     return html`<div class="card">
+      ${s.suspended
+        ? html`<p class="alert" role="alert">
+            ${this.t(
+              'proxygridvpn-suspended',
+              'This account is suspended. Contact ProxyGrid support.'
+            )}
+          </p>`
+        : nothing}
       <div class="usage-row">
         <span class="plan">${s.plan.name}</span>
         <span class="numbers"
@@ -715,6 +765,26 @@ export class HomeView extends LitElement {
       >
         <span style="width:${pct}%"></span>
       </div>
+      <p class="remaining">
+        ${this.t(
+          'proxygridvpn-remaining',
+          `${formatBytes(s.remaining_bytes)} left this period, shared by all locations`,
+          'amount',
+          formatBytes(s.remaining_bytes)
+        )}
+      </p>
+      ${queued && queuedStart && !isNaN(queuedStart.getTime())
+        ? html`<p class="sub">
+            ${this.t(
+              'proxygridvpn-queued-plan',
+              `Next plan: ${queuedName} from ${queuedStart.toLocaleDateString()}`,
+              'plan',
+              queuedName,
+              'date',
+              queuedStart.toLocaleDateString()
+            )}
+          </p>`
+        : nothing}
       <div class="usage-row">
         <span class="sub">
           ${isNaN(renews.getTime())
@@ -726,11 +796,16 @@ export class HomeView extends LitElement {
                 renews.toLocaleDateString()
               )}
         </span>
-        <a href=${BRAND.pricingUrl} target="_blank" rel="noopener"
-          >${s.plan.id === 'free'
-            ? this.t('proxygridvpn-get-more-data', 'Get more data')
-            : this.t('proxygridvpn-manage-plan', 'Manage plan')}</a
-        >
+        <span class="links">
+          <a href=${BRAND.dashboardUrl} target="_blank" rel="noopener"
+            >${this.t('proxygridvpn-billing', 'Billing')}</a
+          >
+          <a href=${BRAND.pricingUrl} target="_blank" rel="noopener"
+            >${s.plan.id === 'free'
+              ? this.t('proxygridvpn-upgrade', 'Upgrade')
+              : this.t('proxygridvpn-manage-plan', 'Manage plan')}</a
+          >
+        </span>
       </div>
       ${this.account?.stale && this.account.error
         ? html`<p class="error" role="alert">${this.account.error}</p>`

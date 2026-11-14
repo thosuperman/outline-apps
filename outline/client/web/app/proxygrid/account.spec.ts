@@ -266,6 +266,26 @@ describe('ProxyGridAccount', () => {
     expect(prefs.getItem('proxygrid_region')).toEqual('eu-central-1');
   });
 
+  it('never sends My Own Server keys to the ProxyGrid API', async () => {
+    const {session, account, servers, api} = setup();
+    const ownKey = 'ss://b3duLXNlY3JldA@198.51.100.7:8388#Home';
+    await servers.add(ownKey);
+    await session.signIn('a@b.c', 'pw');
+    await account.refresh();
+    await account.ensureRegionServer();
+    account.selectRegion('eu-central-1');
+    await account.signOut(async () => {});
+    const allArgs = JSON.stringify([
+      api.status.calls.allArgs(),
+      api.createKey.calls.allArgs(),
+      api.keyAccess.calls.allArgs(),
+    ]);
+    expect(allArgs).not.toContain('198.51.100.7');
+    expect(allArgs).not.toContain('b3duLXNlY3JldA');
+    expect(servers.servers.map(s => s.key)).toContain(ownKey);
+    expect(account.proxyGridServerIds().size).toEqual(0);
+  });
+
   it('sign-out disconnects and removes every ProxyGrid key but keeps own servers', async () => {
     const {session, account, servers} = setup();
     await session.signIn('a@b.c', 'pw');
