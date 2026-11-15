@@ -191,6 +191,32 @@ export class ProxyGridApi {
   }
 }
 
+/**
+ * Regions to show: the planned regions in display order, plus any region the backend reports
+ * that this build does not know yet, labelled as the backend labels it.
+ */
+export function regionList(
+  status: VpnStatus | null | undefined
+): Array<{region: string; label: string}> {
+  const out = PROXYGRID_REGIONS.map(r => ({
+    region: r.region,
+    label: status?.regions.find(s => s.region === r.region)?.label ?? r.label,
+  }));
+  for (const r of status?.regions ?? []) {
+    if (!out.some(o => o.region === r.region)) {
+      out.push({region: r.region, label: r.label || r.region});
+    }
+  }
+  return out;
+}
+
+export function regionLabel(
+  region: string,
+  status: VpnStatus | null | undefined
+): string {
+  return regionList(status).find(r => r.region === region)?.label ?? region;
+}
+
 /** True for keys served by the ProxyGrid dynamic-key endpoint. */
 export function isProxyGridKey(accessKey: string): boolean {
   try {

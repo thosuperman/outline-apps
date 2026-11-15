@@ -22,7 +22,7 @@ import {
   isQuotaBlocked,
   type ProxyGridAccountState,
 } from '../../app/proxygrid/account';
-import {formatBytes, PROXYGRID_REGIONS} from '../../app/proxygrid/api';
+import {formatBytes, regionLabel, regionList} from '../../app/proxygrid/api';
 import {ServerConnectionState} from '../servers_view/server_connection_indicator';
 import type {ServerListItem} from '../servers_view/server_list_item';
 
@@ -603,9 +603,9 @@ export class HomeView extends LitElement {
       this.account?.status,
       this.account?.selectedRegion ?? ''
     );
-    const region =
-      PROXYGRID_REGIONS.find(r => r.region === this.account?.selectedRegion)
-        ?.label ?? '';
+    const region = this.account?.selectedRegion
+      ? regionLabel(this.account.selectedRegion, this.account.status)
+      : '';
     const statusText = {
       [ServerConnectionState.CONNECTED]: this.t(
         'proxygridvpn-protected',
@@ -695,7 +695,7 @@ export class HomeView extends LitElement {
         ${this.t('proxygridvpn-location', 'Location')}
       </p>
       <div class="regions">
-        ${PROXYGRID_REGIONS.map(({region, label}) => {
+        ${regionList(this.account?.status).map(({region, label}) => {
           const rs = statusByRegion.get(region);
           const up = rs?.node_status === 'active';
           const down = rs?.node_status === 'down';

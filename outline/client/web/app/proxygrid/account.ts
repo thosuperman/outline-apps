@@ -16,6 +16,7 @@ import {
   isProxyGridKey,
   PROXYGRID_REGIONS,
   ProxyGridApi,
+  regionLabel,
   ProxyGridApiError,
   VpnStatus,
 } from './api';
@@ -196,9 +197,7 @@ export class ProxyGridAccount {
   }
 
   private regionKeyName(region: string): string {
-    const label =
-      PROXYGRID_REGIONS.find(r => r.region === region)?.label ?? region;
-    return `ProxyGrid ${label}`;
+    return `ProxyGrid ${regionLabel(region, this.state.status)}`;
   }
 
   private findServerForRegion(region: string): string | null {

@@ -17,6 +17,8 @@ import {
   isProxyGridKey,
   ProxyGridApi,
   ProxyGridApiError,
+  regionList,
+  VpnStatus,
 } from './api';
 
 function recordingFetch(status: number, body: unknown) {
@@ -138,5 +140,33 @@ describe('formatBytes', () => {
     expect(formatBytes(3e9)).toEqual('3.0 GB');
     expect(formatBytes(123e9)).toEqual('123 GB');
     expect(formatBytes(-1)).toEqual('—');
+  });
+
+  it('lists backend regions this build does not know yet', () => {
+    const regions = regionList({
+      regions: [
+        {
+          region: 'us-east-1',
+          label: 'Virginia',
+          node_id: 'n2',
+          node_status: 'active',
+          key: null,
+        },
+        {
+          region: 'ap-southeast-1',
+          label: 'Singapore',
+          node_id: 'n3',
+          node_status: 'active',
+          key: null,
+        },
+      ],
+    } as unknown as VpnStatus);
+    expect(regions.map(r => r.label)).toEqual([
+      'Tokyo',
+      'Seoul',
+      'Virginia',
+      'Frankfurt',
+      'Singapore',
+    ]);
   });
 });
