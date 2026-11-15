@@ -11,8 +11,8 @@ by the owner, and the owner asked not to run network tests while they work.
 |---|---|---|---|---|
 | macOS | Signed (development) universal `.dmg`, VPN extension, app group | **Partially verified** | Builds and signs with `net.proxygrid.vpn.macos`; signature verifies; `VpnExtensionTest` passes; shared Go/web tests | Live connect, DNS, sleep/wake, Wi-Fi switch; public Developer ID `.dmg` blocked (BLOCKERS.md) |
 | iOS | Signed (development) `.ipa`, 3 devices | **Partially verified** | Builds, archives and exports with `net.proxygrid.vpn.ios`; shared tests | On-device connect, background/foreground, network switch; App Store build blocked |
-| Android | Debug-signed `.apk` (CI run 43702091164) | **Partially verified** | Builds in CI; `apksigner` verifies (debug cert); package, label, minSdk 29 and sign-in config checked with `aapt2`; shared tests | Device or emulator run, sign-in, connect; release `.aab` blocked on keystore |
-| Windows | Unsigned release NSIS `.exe` 1.0.0, ia32 + arm64 (CI run 43702091164); helpers rebuilt from source | **Partially verified** | Builds in CI; helpers compiled with the new names; shared tests | Install, service and TAP setup, sign-in and connect on Windows; signing; `.msi` blocked |
+| Android | Debug-signed `.apk` (CI run 43704763611) | **Partially verified** | Builds in CI; `apksigner` verifies (debug cert); package, label, minSdk 29 and sign-in config checked with `aapt2`; shared tests | Device or emulator run, sign-in, connect; release `.aab` blocked on keystore |
+| Windows | Unsigned release NSIS `.exe` 1.0.0, ia32 + arm64 (CI run 43704763611); helpers rebuilt from source | **Partially verified** | Builds in CI; helpers compiled with the new names; shared tests | Install, service and TAP setup, sign-in and connect on Windows; signing; `.msi` blocked |
 | Shared Go core | — | **Verified** (automated) | See below | — |
 | Web UI | — | **Verified** (automated + visual check in browser) | See below | Real Cognito sign-in in the app (backend is live; needs the owner to sign in) |
 
