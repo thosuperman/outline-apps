@@ -48,7 +48,7 @@ defaults:
     working-directory: outline
 
 env:
-  VERSION_NAME: ${{ inputs.version || (startsWith(github.ref, 'refs/tags/gridvpn-v') && github.ref_name) || '' }}
+  VERSION_NAME: ${{ inputs.version || (startsWith(github.ref, 'refs/tags/proxygridvpn-v') && github.ref_name) || '' }}
   PROXYGRID_COGNITO_REGION: ${{ vars.PROXYGRID_COGNITO_REGION }}
   PROXYGRID_USER_POOL_ID: ${{ vars.PROXYGRID_USER_POOL_ID }}
   PROXYGRID_USER_POOL_CLIENT_ID: ${{ vars.PROXYGRID_USER_POOL_CLIENT_ID }}
@@ -127,7 +127,7 @@ jobs:
         run: |
           if [ -n "$VERSION_NAME" ]; then
             npm run action client/electron/build windows -- --arch ${{ matrix.arch }} \
-              --buildMode=release --versionName="${VERSION_NAME#gridvpn-v}" \
+              --buildMode=release --versionName="${VERSION_NAME#proxygridvpn-v}" \
               --autoUpdateUrl="${{ vars.PROXYGRIDVPN_UPDATE_URL || 'https://proxygrid.net/vpn/download/windows/' }}"
           else
             npm run action client/electron/build windows -- --arch ${{ matrix.arch }}
@@ -159,7 +159,7 @@ jobs:
         run: |
           if [ -n "$VERSION_NAME" ] && [ -n "$ANDROID_KEY_STORE_CONTENTS" ]; then
             npm run action client/src/cordova/build android -- --buildMode=release \
-              --versionName="${VERSION_NAME#gridvpn-v}" --buildNumber="${{ github.run_number }}"
+              --versionName="${VERSION_NAME#proxygridvpn-v}" --buildNumber="${{ github.run_number }}"
           else
             npm run action client/src/cordova/build android -- --verbose
           fi
