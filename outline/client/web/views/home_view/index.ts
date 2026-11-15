@@ -532,7 +532,7 @@ export class HomeView extends LitElement {
       <p class="notice">
         ${this.t(
           'proxygridvpn-free-plan-notice',
-          'Free plan: 3 GB every 30 days in Tokyo, Seoul, Virginia and Frankfurt.'
+          'Free plan: 3 GB of VPN data every 30 days.'
         )}
         <button
           class="link"

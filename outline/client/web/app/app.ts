@@ -286,9 +286,20 @@ export class App {
     };
     if (!this.arePrivacyTermsAcked()) {
       this.displayPrivacyView();
-    } else if (this.rootEl.$.serversView.shouldShowZeroState) {
+    } else if (this.shouldPromptForFirstKey()) {
       this.rootEl.$.addServerView.open = true;
     }
+  }
+
+  /**
+   * Opens the add-key dialog on first run only in "My Own Server" mode. In ProxyGrid mode the
+   * home screen is the sign-in form, which the dialog would otherwise cover.
+   */
+  private shouldPromptForFirstKey(): boolean {
+    return (
+      this.rootEl.$.serversView.shouldShowZeroState &&
+      this.rootEl.homeMode === 'own'
+    );
   }
 
   showLocalizedError(error?: Error, toastDuration = 10000) {
@@ -433,7 +444,7 @@ export class App {
   private ackPrivacyTerms() {
     this.rootEl.$.serversView.hidden = false;
     this.rootEl.$.privacyView.open = false;
-    this.rootEl.$.addServerView.open = true;
+    this.rootEl.$.addServerView.open = this.shouldPromptForFirstKey();
     this.settings.set(SettingsKey.PRIVACY_ACK, 'true');
   }
 
