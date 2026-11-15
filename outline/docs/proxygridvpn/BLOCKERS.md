@@ -61,7 +61,11 @@ registered to team 797NU6L392.
 
 ## Android: signed release .aab (and release .apk)
 
-**Have:** `ProxyGridVPN-app-debug.apk` from CI (debug-signed).
+**Have:** `ProxyGridVPN-app-debug.apk` from CI run 43702091164 (commit 79caca59). It is signed
+only with the Android debug certificate (`CN=Android Debug`, APK signature v2): it installs by
+sideloading but cannot go to Play. Package `net.proxygrid.vpn`, label "ProxyGridVPN", minSdk 29
+(Android 10), targetSdk 36; it carries the proxygrid.net sign-in config. Without a keystore the
+workflow builds a debug APK even when a version is given, so the version reads `0.0.0-debug`.
 
 **Missing:** an upload keystore, which the release build reads from CI secrets
 (`client/src/cordova/build.action.mjs`: PKCS#12, alias `privatekey`).
@@ -90,8 +94,11 @@ every update. Publishing to Play needs a Play Console listing (owner's approval)
 
 ## Windows: signed .exe, and .msi
 
-**Have:** `ProxyGridVPN-<version>-ia32.exe` and `-arm64.exe` NSIS installers from CI, unsigned, and
-the routing service and DNS-leak helper rebuilt from source.
+**Have:** `ProxyGridVPN-1.0.0-ia32.exe` and `ProxyGridVPN-1.0.0-arm64.exe` NSIS installers
+(release mode) from CI run 43702091164 (commit 79caca59), and the routing service and DNS-leak
+helper rebuilt from source. Nothing is Authenticode-signed (installer, app or helpers): Windows
+SmartScreen will warn ("Unknown publisher"), and some antivirus tools may block the unsigned
+service. The ia32 build is the one for x64 PCs (it runs under WOW64, as Outline does).
 
 **Missing (signing):** an OV or EV Authenticode code-signing certificate. CAs now require the key
 in hardware; the existing pipeline signs with a key in Google Cloud KMS (HSM)
